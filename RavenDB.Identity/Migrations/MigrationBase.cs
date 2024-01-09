@@ -1,10 +1,7 @@
 ﻿using Raven.Client.Documents;
 using Raven.Client.Documents.Commands;
-using Raven.Client.Documents.Queries;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Raven.Identity.Migrations
 {
@@ -16,7 +13,7 @@ namespace Raven.Identity.Migrations
         /// <summary>
         /// The Raven doc store.
         /// </summary>
-        protected readonly IDocumentStore docStore;
+        protected readonly IDocumentStore DocStore;
 
         /// <summary>
         /// Creates a new instance.
@@ -24,7 +21,7 @@ namespace Raven.Identity.Migrations
         /// <param name="db">The Raven document store.</param>
         protected MigrationBase(IDocumentStore db)
         {
-            this.docStore = db;
+            DocStore = db;
         }
 
         /// <summary>
@@ -44,13 +41,13 @@ namespace Raven.Identity.Migrations
         /// <returns>A lazy stream of documents.</returns>
         public IEnumerable<StreamResult<T>> StreamWithMetadata<T>()
         {
-            using var dbSession = docStore.OpenSession();
-            var collectionName = this.docStore.Conventions.FindCollectionName(typeof(T));
-            var identityPartsSeparator = this.docStore.Conventions.IdentityPartsSeparator;
+            using var dbSession = DocStore.OpenSession();
+            var collectionName = DocStore.Conventions.FindCollectionName(typeof(T));
+            var identityPartsSeparator = DocStore.Conventions.IdentityPartsSeparator;
             using var stream = dbSession.Advanced.Stream<T>(collectionName + identityPartsSeparator);
             while (stream.MoveNext())
             {
-                yield return stream.Current;
+                yield return stream.Current ?? new StreamResult<T>();
             }
         }
     }

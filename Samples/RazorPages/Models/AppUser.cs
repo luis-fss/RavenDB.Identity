@@ -1,10 +1,4 @@
-﻿using Raven.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Sample.Models
+﻿namespace Sample.RazorPages.Models
 {
     public class AppUser : Raven.Identity.IdentityUser
     {

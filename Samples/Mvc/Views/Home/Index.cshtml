@@ -2,10 +2,11 @@
     ViewData["Title"] = "Home Page";
 }
 
+@* ReSharper disable Html.PathError *@
     <div class="text-center">
 
         <h1 class="display-4">Welcome to MVC sample for Raven.Identity</h1>
-        @if (User.Identity.IsAuthenticated)
+        @if (User.Identity?.IsAuthenticated is true)
         {
             <p>
                 Hi, @User.Identity.Name. You're currently signed in, and your role is @ViewBag.UserRoles. 😎
@@ -22,3 +23,4 @@
             <p>You're not signed in. Please <a href="/account/signin">Sign In</a> or <a href="/account/register">Register</a>.</p>
         }
     </div>
+@* ReSharper restore Html.PathError *@

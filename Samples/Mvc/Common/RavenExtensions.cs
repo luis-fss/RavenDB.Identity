@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Raven.Client.Documents;
+﻿using Raven.Client.Documents;
 using Sample.Mvc.Models;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Sample.Mvc.Common
 {
@@ -15,6 +12,7 @@ namespace Sample.Mvc.Common
             try
             {
                 using var dbSession = store.OpenSession();
+                // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
                 dbSession.Query<AppUser>().Take(0).ToList();
             }
             catch (Raven.Client.Exceptions.Database.DatabaseDoesNotExistException)

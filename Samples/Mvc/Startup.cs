@@ -28,7 +28,7 @@ namespace Sample.Mvc
             services.Configure<CookiePolicyOptions>(options =>
             {
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-                options.CheckConsentNeeded = context => false;
+                options.CheckConsentNeeded = _ => false;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
                 options.Secure = CookieSecurePolicy.Always;
             });
@@ -36,8 +36,8 @@ namespace Sample.Mvc
             services
                 .AddRavenDbDocStore() // Create our IDocumentStore singleton using the database settings in appsettings.json
                 .AddRavenDbAsyncSession() // Create an Raven IAsyncDocumentSession for every request.
-                .AddIdentity<AppUser, Raven.Identity.IdentityRole>() // Tell ASP.NET to use identity framework.
-                .AddRavenDbIdentityStores<AppUser, Raven.Identity.IdentityRole>(); // Use Raven as the Identity store for user users and roles.
+                .AddIdentity<AppUser, IdentityRole>() // Tell ASP.NET to use identity framework.
+                .AddRavenDbIdentityStores<AppUser, IdentityRole>(); // Use Raven as the Identity store for user users and roles.
 
             services.AddControllersWithViews();
         }

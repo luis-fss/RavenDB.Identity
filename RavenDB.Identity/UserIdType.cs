@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Raven.Identity
+﻿namespace Raven.Identity
 {
     /// <summary>
     /// The type of ID to create for users.

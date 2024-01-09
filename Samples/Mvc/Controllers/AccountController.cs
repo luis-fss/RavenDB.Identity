@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -12,8 +10,8 @@ namespace Sample.Mvc.Controllers
 {
     public class AccountController : RavenController
     {
-        private readonly SignInManager<AppUser> signInManager;
-        private readonly UserManager<AppUser> userManager;
+        private readonly SignInManager<AppUser> _signInManager;
+        private readonly UserManager<AppUser> _userManager;
         
         public AccountController(
             IAsyncDocumentSession dbSession, // injected thanks to Startup.cs call to services.AddRavenDbAsyncSession()
@@ -21,8 +19,8 @@ namespace Sample.Mvc.Controllers
             SignInManager<AppUser> signInManager) // injected thanks to Startup.cs call to services.AddRavenDbIdentity<AppUser>()
             : base(dbSession)
         {
-            this.userManager = userManager;
-            this.signInManager = signInManager;
+            this._userManager = userManager;
+            this._signInManager = signInManager;
         }
 
         [HttpGet]
@@ -34,7 +32,7 @@ namespace Sample.Mvc.Controllers
         [HttpPost]
         public async Task<IActionResult> SignIn(SignInModel model)
         {
-            var signInResult = await this.signInManager.PasswordSignInAsync(model.Email, model.Password, true, false);
+            var signInResult = await _signInManager.PasswordSignInAsync(model.Email, model.Password, true, false);
             if (signInResult.Succeeded)
             {
                 return RedirectToAction("Index", "Home");
@@ -69,7 +67,7 @@ namespace Sample.Mvc.Controllers
                 Email = model.Email,
                 UserName = model.Email
             };
-            var createUserResult = await this.userManager.CreateAsync(appUser, model.Password);
+            var createUserResult = await _userManager.CreateAsync(appUser, model.Password);
             if (!createUserResult.Succeeded)
             {
                 var errorString = string.Join(", ", createUserResult.Errors.Select(e => e.Description));
@@ -77,11 +75,11 @@ namespace Sample.Mvc.Controllers
             }
 
             // Add him to a role.
-            await this.userManager.AddToRoleAsync(appUser, AppUser.ManagerRole);
+            await _userManager.AddToRoleAsync(appUser, AppUser.ManagerRole);
 
             // Sign him in and go home.
-            await this.signInManager.SignInAsync(appUser, true);
-            return this.RedirectToAction("Index", "Home");
+            await _signInManager.SignInAsync(appUser, true);
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpGet]
@@ -101,27 +99,27 @@ namespace Sample.Mvc.Controllers
         [HttpPost]
         public async Task<IActionResult> ChangeRoles(ChangeRolesModel model)
         {
-            var currentUser = await this.userManager.FindByEmailAsync(User.Identity.Name);
-            var currentRoles = await this.userManager.GetRolesAsync(currentUser);
+            var currentUser = await _userManager.FindByEmailAsync(User.Identity?.Name);
+            var currentRoles = await _userManager.GetRolesAsync(currentUser);
 
             // Add any new roles.
             var newRoles = model.Roles.Except(currentRoles).ToList();
-            await this.userManager.AddToRolesAsync(currentUser, newRoles);
+            await _userManager.AddToRolesAsync(currentUser, newRoles);
 
             // Remove any old roles we're no longer in.
             var removedRoles = currentRoles.Except(model.Roles).ToList();
-            await this.userManager.RemoveFromRolesAsync(currentUser, removedRoles);
+            await _userManager.RemoveFromRolesAsync(currentUser, removedRoles);
             
             // After we change roles, we need to call SignInAsync before AspNetCore Identity picks up the new roles.
-            await this.signInManager.SignInAsync(currentUser, true);
+            await _signInManager.SignInAsync(currentUser, true);
 
             return RedirectToAction("Index", "Home");
         }
 
         [HttpGet]
-        public async Task<IActionResult> SignOut()
+        public new async Task<IActionResult> SignOut()
         {
-            await this.signInManager.SignOutAsync();
+            await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
 
@@ -134,9 +132,9 @@ namespace Sample.Mvc.Controllers
         [HttpPost]
         public async Task<IActionResult> ChangeEmail(string oldEmail, string newEmail)
         {
-            var user = await userManager.FindByEmailAsync(oldEmail);
+            var user = await _userManager.FindByEmailAsync(oldEmail);
             user.Email = newEmail;
-            var updateResult = await userManager.UpdateAsync(user);
+            var updateResult = await _userManager.UpdateAsync(user);
             return Json(updateResult);
         }
     }

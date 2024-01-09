@@ -2,8 +2,6 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Raven.Client.Documents.Session;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sample.Mvc.Controllers
@@ -15,12 +13,12 @@ namespace Sample.Mvc.Controllers
     {
         public RavenController(IAsyncDocumentSession dbSession)
         {
-            this.DbSession = dbSession;
+            DbSession = dbSession;
 
             // RavenDB best practice: during save, wait for the indexes to update.
             // This way, Post-Redirect-Get scenarios won't be affected by stale indexes.
             // For more info, see https://ravendb.net/docs/article-page/4.2/csharp/client-api/session/saving-changes
-            this.DbSession.Advanced.WaitForIndexesAfterSaveChanges(timeout: TimeSpan.FromSeconds(5), throwOnTimeout: false);
+            DbSession.Advanced.WaitForIndexesAfterSaveChanges(timeout: TimeSpan.FromSeconds(5), throwOnTimeout: false);
         }
 
         public IAsyncDocumentSession DbSession { get; private set; }

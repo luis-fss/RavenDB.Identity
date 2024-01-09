@@ -1,23 +1,19 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Raven.Client.Documents.Session;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace Sample
+namespace Sample.RazorPages.Filters
 {
     /// <summary>
     /// Razor Pages filter that saves any changes after the action completes.
     /// </summary>
     public class RavenSaveChangesAsyncFilter : IAsyncPageFilter
     {
-        private readonly IAsyncDocumentSession dbSession;
+        private readonly IAsyncDocumentSession _dbSession;
 
         public RavenSaveChangesAsyncFilter(IAsyncDocumentSession dbSession)
         {
-            this.dbSession = dbSession;
+            this._dbSession = dbSession;
         }
 
         public async Task OnPageHandlerSelectionAsync(PageHandlerSelectedContext context)
@@ -32,7 +28,7 @@ namespace Sample
             // If there was no exception, and the action wasn't cancelled, save changes.
             if (result.Exception == null && !result.Canceled)
             {
-                await this.dbSession.SaveChangesAsync();
+                await _dbSession.SaveChangesAsync();
             }
         }
     }

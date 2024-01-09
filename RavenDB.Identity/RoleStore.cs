@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Raven.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Raven.Client.Documents.Session;
 using Raven.Client.Exceptions;
@@ -35,7 +32,7 @@ namespace Raven.Identity
             IEnumerable<IRoleValidator<TRole>> roleValidators,
             ILookupNormalizer keyNormalizer,
             IdentityErrorDescriber errors,
-            ILogger<RoleManager<TRole>> logger) :
+            ILogger<RoleMan<TRole>> logger) :
             base(store, roleValidators, keyNormalizer, errors, logger)
         {
         }
@@ -129,7 +126,7 @@ namespace Raven.Identity
         /// <summary>
         /// Gets the roles as an IQueryable.
         /// </summary>
-        public virtual IQueryable<TRole> Roles => this.AsyncSession.Query<TRole>();
+        public virtual IQueryable<TRole> Roles => AsyncSession.Query<TRole>();
 
         #endregion
 

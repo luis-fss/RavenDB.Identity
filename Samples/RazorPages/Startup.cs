@@ -1,18 +1,17 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Sample.Models;
+using Microsoft.Extensions.Hosting;
+using Raven.Client.Documents;
 using Raven.DependencyInjection;
 using Raven.Identity;
-using Raven.Client.Documents;
-using Sample.Common;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Hosting;
+using Sample.RazorPages.Common;
+using Sample.RazorPages.Filters;
+using Sample.RazorPages.Models;
 
-namespace Sample
+namespace Sample.RazorPages
 {
     public class Startup
     {

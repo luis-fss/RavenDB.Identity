@@ -1,10 +1,4 @@
-﻿using Raven.Client.Documents;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Raven.Identity
+﻿namespace Raven.Identity
 {
     /// <summary>
     /// A authorization token created by a login provider.
