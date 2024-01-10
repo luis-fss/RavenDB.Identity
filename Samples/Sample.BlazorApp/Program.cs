@@ -37,6 +37,8 @@ builder.Services
         options.Password.RequireLowercase = false;
         options.Password.RequireUppercase = false;
         options.Password.RequireNonAlphanumeric = false;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     })
     // Use RavenDB as the store for identity users and roles. Specify your app user type here, and your role type.
     // If you don't have a role type, use Raven.Identity.IdentityRole.
