@@ -4,7 +4,7 @@ namespace Sample.BlazorApp.Data
 {
     public static class RavenExtensions
     {
-        public static IDocumentStore EnsureExists(this IDocumentStore store)
+        public static IDocumentStore EnsureDatabaseExists(this IDocumentStore store)
         {
             try
             {
@@ -23,29 +23,23 @@ namespace Sample.BlazorApp.Data
             return store;
         }
 
-        public static IDocumentStore EnsureRolesExist(this IDocumentStore docStore, List<string> roleNames)
+        public static void EnsureRolesExist(this IDocumentStore docStore, IEnumerable<string> roleNames)
         {
-            using (var dbSession = docStore.OpenSession())
-            {
-                var roleIds = roleNames.Select(r => "IdentityRoles/" + r);
-                var roles = dbSession.Load<Raven.Identity.IdentityRole>(roleIds);
-                foreach (var idRolePair in roles)
-                {
-                    if (idRolePair.Value == null)
-                    {
-                        var id = idRolePair.Key;
-                        var roleName = id.Replace("IdentityRoles/", string.Empty);
-                        dbSession.Store(new Raven.Identity.IdentityRole(roleName), id);
-                    }
-                }
+            using var dbSession = docStore.OpenSession();
+            var roleIds = roleNames.Select(r => "IdentityRoles/" + r);
+            var roles = dbSession.Load<Raven.Identity.IdentityRole>(roleIds);
 
-                if (roles.Any(i => i.Value == null))
-                {
-                    dbSession.SaveChanges();
-                }
+            foreach (var (id, value) in roles)
+            {
+                if (value != null) continue;
+                var roleName = id.Replace("IdentityRoles/", string.Empty);
+                dbSession.Store(new Raven.Identity.IdentityRole(roleName), id);
             }
 
-            return docStore;
+            if (roles.Any(i => i.Value == null))
+            {
+                dbSession.SaveChanges();
+            }
         }
     }
 }

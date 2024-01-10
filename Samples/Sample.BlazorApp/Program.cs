@@ -91,8 +91,7 @@ app.UseAntiforgery();
 // Create the database if it doesn't exist.
 // Also, create our roles if they don't exist. Needed because we're doing some role-based auth in this demo.
 var docStore = app.Services.GetRequiredService<IDocumentStore>();
-docStore.EnsureExists();
-docStore.EnsureRolesExist([ApplicationUser.AdminRole, ApplicationUser.ManagerRole]);
+docStore.EnsureDatabaseExists().EnsureRolesExist([ApplicationUser.AdminRole, ApplicationUser.ManagerRole]);
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
