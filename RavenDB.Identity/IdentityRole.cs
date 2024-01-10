@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-// ReSharper disable VirtualMemberCallInConstructor
 
 namespace Raven.Identity
 {

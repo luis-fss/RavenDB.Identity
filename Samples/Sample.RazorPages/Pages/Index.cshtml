@@ -6,7 +6,6 @@
     ViewData["Title"] = "Home page";
 }
 @inject SignInManager<ApplicationUser> SignInManager
-@* ReSharper disable Html.PathError *@
 <div class="text-center">
     <h1 class="display-4">Welcome to Razor Pages sample for Raven.Identity</h1>
     @if (SignInManager.IsSignedIn(User))
@@ -22,4 +21,3 @@
         <p>You're not signed in. Click <a target="_blank" href="/identity/account/register">register</a> or <a href="/identity/account/login">login</a> to try out Raven.Identity.</p>
     }
 </div>
-@* ReSharper restore Html.PathError *@

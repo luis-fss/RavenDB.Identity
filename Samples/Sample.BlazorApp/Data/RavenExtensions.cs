@@ -9,8 +9,8 @@ namespace Sample.BlazorApp.Data
             try
             {
                 using var dbSession = store.OpenSession();
-                // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-                dbSession.Query<ApplicationUser>().Take(0).ToList();
+                // ReSharper disable once UnusedVariable
+                var applicationUsers = dbSession.Query<ApplicationUser>().Take(0).ToList();
             }
             catch (Raven.Client.Exceptions.Database.DatabaseDoesNotExistException)
             {

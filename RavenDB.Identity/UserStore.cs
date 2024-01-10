@@ -782,13 +782,13 @@ namespace Raven.Identity
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private void ThrowIfNullDisposedCancelled(TUser user, CancellationToken token)
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(GetType().Name);
-            }
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
+            }
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(GetType().Name);
             }
             token.ThrowIfCancellationRequested();
         }
