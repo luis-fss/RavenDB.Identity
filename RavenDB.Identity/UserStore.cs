@@ -19,7 +19,7 @@ namespace Raven.Identity
     /// </summary>
     /// <typeparam name="TUser"></typeparam>
 	/// <typeparam name="TRole"></typeparam>
-    public class UserStore<TUser, TRole> :
+    public sealed class UserStore<TUser, TRole> :
         IUserLoginStore<TUser>,
         IUserClaimStore<TUser>,
         IUserRoleStore<TUser>,
@@ -51,8 +51,8 @@ namespace Raven.Identity
         public UserStore(Func<IAsyncDocumentSession> getSession, ILogger<UserStore<TUser, TRole>> logger, IOptions<RavenDbIdentityOptions> options)
         {
             _getSessionFunc = getSession;
-            this._logger = logger;
-            this._options = options;
+            _logger = logger;
+            _options = options;
         }
 
         /// <summary>
@@ -63,9 +63,9 @@ namespace Raven.Identity
         /// <param name="options"></param>
         public UserStore(IAsyncDocumentSession session, ILogger<UserStore<TUser, TRole>> logger, IOptions<RavenDbIdentityOptions> options)
         {
-            this._session = session;
-            this._logger = logger;
-            this._options = options;
+            _session = session;
+            _logger = logger;
+            _options = options;
         }
 
         #region IDisposable implementation
@@ -73,7 +73,7 @@ namespace Raven.Identity
         /// <summary>
         /// Disposes the user store.
         /// </summary>
-        public virtual void Dispose()
+        public void Dispose()
         {
             _disposed = true;
         }
@@ -83,30 +83,32 @@ namespace Raven.Identity
         #region IUserStore implementation
 
         /// <inheritdoc />
-        public virtual Task<string> GetUserIdAsync(TUser user, CancellationToken cancellationToken) => Task.FromResult(user.Id)!;
+        public Task<string> GetUserIdAsync(TUser user, CancellationToken cancellationToken) => Task.FromResult(user.Id)!;
 
         /// <inheritdoc />
-        public virtual Task<string?> GetUserNameAsync(TUser user, CancellationToken cancellationToken) => Task.FromResult(user.UserName)!;
+        public Task<string?> GetUserNameAsync(TUser user, CancellationToken cancellationToken) => Task.FromResult(user.UserName)!;
 
         /// <inheritdoc />
-        public virtual Task SetUserNameAsync(TUser user, string? userName, CancellationToken cancellationToken)
+        public Task SetUserNameAsync(TUser user, string? userName, CancellationToken cancellationToken)
         {
+            ThrowIfNullDisposedCancelled(user, cancellationToken);
             user.UserName = userName ?? throw new ArgumentNullException(nameof(userName));
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public virtual Task<string?> GetNormalizedUserNameAsync(TUser user, CancellationToken cancellationToken) => Task.FromResult(user.UserName)!;
+        public Task<string?> GetNormalizedUserNameAsync(TUser user, CancellationToken cancellationToken) => Task.FromResult(user.UserName)!;
 
         /// <inheritdoc />
-        public virtual Task SetNormalizedUserNameAsync(TUser user, string? normalizedName, CancellationToken cancellationToken)
+        public Task SetNormalizedUserNameAsync(TUser user, string? normalizedName, CancellationToken cancellationToken)
         {
+            ThrowIfNullDisposedCancelled(user, cancellationToken);
             user.UserName = normalizedName?.ToLowerInvariant() ?? throw new ArgumentNullException(nameof(normalizedName));
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public virtual async Task<IdentityResult> CreateAsync(TUser user, CancellationToken cancellationToken)
+        public async Task<IdentityResult> CreateAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
 
@@ -175,7 +177,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual async Task<IdentityResult> UpdateAsync(TUser user, CancellationToken cancellationToken)
+        public async Task<IdentityResult> UpdateAsync(TUser user, CancellationToken cancellationToken)
         {
 			ThrowIfNullDisposedCancelled(user, cancellationToken);
 
@@ -207,6 +209,7 @@ namespace Raven.Identity
                 _logger.LogTrace("User {UserId} did not have modified Email, saving normally", user.Id);
 
                 // Email didn't change, so no reservation to update. Just save the user data
+                await DbSession.SaveChangesAsync(cancellationToken);
                 return IdentityResult.Success;
             }
 
@@ -236,12 +239,15 @@ namespace Raven.Identity
                 return IdentityResult.Failed(new IdentityErrorDescriber().DuplicateEmail(user.Email));
             }
 
+            // Email reservation done, now we save the user data
+            await DbSession.SaveChangesAsync(cancellationToken);
+
             await TryRemoveMigratedEmailReservation(oldEmail, user.Email);
             return IdentityResult.Success;
         }
 
         /// <inheritdoc />
-        public virtual async Task<IdentityResult> DeleteAsync(TUser user, CancellationToken cancellationToken)
+        public async Task<IdentityResult> DeleteAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
@@ -262,11 +268,11 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual Task<TUser?> FindByIdAsync(string userId, CancellationToken cancellationToken) =>
+        public Task<TUser?> FindByIdAsync(string userId, CancellationToken cancellationToken) =>
             DbSession.LoadAsync<TUser>(userId, cancellationToken)!;
 
         /// <inheritdoc />
-        public virtual  Task<TUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
+        public Task<TUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
         {
             return UserQuery()
                 .SingleOrDefaultAsync(u => u.UserName == normalizedUserName, cancellationToken)!;
@@ -277,7 +283,7 @@ namespace Raven.Identity
         #region IUserLoginStore implementation
 
         /// <inheritdoc />
-        public virtual Task AddLoginAsync(TUser user, UserLoginInfo login, CancellationToken cancellationToken)
+        public Task AddLoginAsync(TUser user, UserLoginInfo login, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
             if (login == null)
@@ -290,7 +296,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual Task RemoveLoginAsync(TUser user, string loginProvider, string providerKey, CancellationToken cancellationToken)
+        public Task RemoveLoginAsync(TUser user, string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
             user.Logins.RemoveAll(l => l.LoginProvider == loginProvider && l.ProviderKey == providerKey);
@@ -298,14 +304,14 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual Task<IList<UserLoginInfo>> GetLoginsAsync(TUser user, CancellationToken cancellationToken)
+        public Task<IList<UserLoginInfo>> GetLoginsAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
             return Task.FromResult(user.Logins as IList<UserLoginInfo>);
         }
 
         /// <inheritdoc />
-        public virtual Task<TUser?> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
+        public Task<TUser?> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
             if (_options.Value.UseStaticIndexes)
             {
@@ -326,7 +332,7 @@ namespace Raven.Identity
         #region IUserClaimStore implementation
 
         /// <inheritdoc />
-        public virtual Task<IList<Claim>> GetClaimsAsync(TUser user, CancellationToken cancellationToken)
+        public Task<IList<Claim>> GetClaimsAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
 
@@ -337,7 +343,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual Task AddClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
+        public Task AddClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
 
@@ -346,7 +352,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual async Task ReplaceClaimAsync(TUser user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
+        public async Task ReplaceClaimAsync(TUser user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
 
@@ -359,7 +365,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual Task RemoveClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
+        public Task RemoveClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
 
@@ -368,7 +374,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual async Task<IList<TUser>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
+        public async Task<IList<TUser>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
         {
             ThrowIfDisposedOrCancelled(cancellationToken);
             if (claim == null)
@@ -388,7 +394,7 @@ namespace Raven.Identity
         #region IUserRoleStore implementation
 
         /// <inheritdoc />
-        public virtual async Task AddToRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
+        public async Task AddToRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
 
@@ -419,7 +425,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual async Task RemoveFromRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
+        public async Task RemoveFromRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
 
@@ -434,7 +440,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual Task<IList<string>> GetRolesAsync(TUser user, CancellationToken cancellationToken)
+        public Task<IList<string>> GetRolesAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
 
@@ -442,7 +448,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual Task<bool> IsInRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
+        public Task<bool> IsInRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(roleName))
             {
@@ -453,7 +459,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual async Task<IList<TUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
+        public async Task<IList<TUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
         {
             ThrowIfDisposedOrCancelled(cancellationToken);
             if (string.IsNullOrEmpty(roleName))
@@ -473,23 +479,22 @@ namespace Raven.Identity
         #region IUserPasswordStore implementation
 
         /// <inheritdoc />
-        public virtual Task SetPasswordHashAsync(TUser user, string? passwordHash, CancellationToken cancellationToken)
+        public Task SetPasswordHashAsync(TUser user, string? passwordHash, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
-            user.PasswordHash = passwordHash;
+            user.PasswordHash = passwordHash ?? throw new ArgumentNullException(nameof(passwordHash));
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public virtual Task<string?> GetPasswordHashAsync(TUser user, CancellationToken cancellationToken)
+        public Task<string?> GetPasswordHashAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
             return Task.FromResult(user.PasswordHash);
         }
 
         /// <inheritdoc />
-        public virtual Task<bool> HasPasswordAsync(TUser user, CancellationToken cancellationToken)
+        public Task<bool> HasPasswordAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
             return Task.FromResult(user.PasswordHash != null);
@@ -500,16 +505,15 @@ namespace Raven.Identity
         #region IUserSecurityStampStore implementation
 
         /// <inheritdoc />
-        public virtual Task SetSecurityStampAsync(TUser user, string stamp, CancellationToken cancellationToken)
+        public Task SetSecurityStampAsync(TUser user, string stamp, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
-            user.SecurityStamp = stamp;
+            user.SecurityStamp = stamp ?? throw new ArgumentNullException(nameof(stamp));
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public virtual Task<string?> GetSecurityStampAsync(TUser user, CancellationToken cancellationToken)
+        public Task<string?> GetSecurityStampAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
 
@@ -521,7 +525,7 @@ namespace Raven.Identity
         #region IUserEmailStore implementation
 
         /// <inheritdoc />
-        public virtual Task SetEmailAsync(TUser user, string? email, CancellationToken cancellationToken)
+        public Task SetEmailAsync(TUser user, string? email, CancellationToken cancellationToken)
         {
             ThrowIfDisposedOrCancelled(cancellationToken);
             user.Email = email?.ToLowerInvariant() ?? throw new ArgumentNullException(nameof(email));
@@ -529,45 +533,46 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual Task<string?> GetEmailAsync(TUser user, CancellationToken cancellationToken) =>
+        public Task<string?> GetEmailAsync(TUser user, CancellationToken cancellationToken) =>
             Task.FromResult(user.Email)!;
 
         /// <inheritdoc />
-        public virtual Task<bool> GetEmailConfirmedAsync(TUser user, CancellationToken cancellationToken) =>
+        public Task<bool> GetEmailConfirmedAsync(TUser user, CancellationToken cancellationToken) =>
             Task.FromResult(user.EmailConfirmed);
 
         /// <inheritdoc />
-        public virtual Task SetEmailConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
+        public Task SetEmailConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
         {
+            ThrowIfNullDisposedCancelled(user, cancellationToken);
             user.EmailConfirmed = confirmed;
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-#pragma warning disable CS8613 // Nullability of reference types in return type doesn't match implicitly implemented member.
-        public virtual async Task<TUser?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
-#pragma warning restore CS8613 // Nullability of reference types in return type doesn't match implicitly implemented member.
+        public async Task<TUser?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
         {
             // While we could just do an index query here: DbSession.Query<TUser>().FirstOrDefaultAsync(u => u.Email == normalizedEmail)
             // We decided against this because indexes can be stale.
             // Instead, we're going to go straight to the compare/exchange values and find the user for the email.
             var key = Conventions.CompareExchangeKeyFor(normalizedEmail);
-            var readResult = await DbSession.Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)DbSession).DatabaseName).SendAsync(new GetCompareExchangeValueOperation<string>(key));
+            var readResult = await DbSession.Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)DbSession).DatabaseName)
+                .SendAsync(new GetCompareExchangeValueOperation<string>(key), token: cancellationToken);
             if (readResult == null || string.IsNullOrEmpty(readResult.Value))
             {
                 return null;
             }
 
-            return await DbSession.LoadAsync<TUser>(readResult.Value);
+            return await DbSession.LoadAsync<TUser>(readResult.Value, cancellationToken);
         }
 
         /// <inheritdoc />
-        public virtual Task<string?> GetNormalizedEmailAsync(TUser user, CancellationToken cancellationToken) =>
+        public Task<string?> GetNormalizedEmailAsync(TUser user, CancellationToken cancellationToken) =>
             Task.FromResult(user.Email)!;
 
         /// <inheritdoc />
-        public virtual Task SetNormalizedEmailAsync(TUser user, string? normalizedEmail, CancellationToken cancellationToken)
+        public Task SetNormalizedEmailAsync(TUser user, string? normalizedEmail, CancellationToken cancellationToken)
         {
+            ThrowIfNullDisposedCancelled(user, cancellationToken);
             user.Email = normalizedEmail?.ToLowerInvariant() ?? throw new ArgumentNullException(nameof(normalizedEmail)); // I don't like the ALL CAPS default. We're going all lower.
             return Task.CompletedTask;
         }
@@ -577,60 +582,54 @@ namespace Raven.Identity
         #region IUserLockoutStore implementation
 
         /// <inheritdoc />
-        public virtual Task<DateTimeOffset?> GetLockoutEndDateAsync(TUser user, CancellationToken cancellationToken)
+        public Task<DateTimeOffset?> GetLockoutEndDateAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
             return Task.FromResult(user.LockoutEnd);
         }
 
         /// <inheritdoc />
-        public virtual Task SetLockoutEndDateAsync(TUser user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
+        public Task SetLockoutEndDateAsync(TUser user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
             user.LockoutEnd = lockoutEnd;
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public virtual Task<int> IncrementAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
+        public Task<int> IncrementAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
             user.AccessFailedCount++;
             return Task.FromResult(user.AccessFailedCount);
         }
 
         /// <inheritdoc />
-        public virtual Task ResetAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
+        public Task ResetAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
             user.AccessFailedCount = 0;
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public virtual Task<int> GetAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
+        public Task<int> GetAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
             return Task.FromResult(user.AccessFailedCount);
         }
 
         /// <inheritdoc />
-        public virtual Task<bool> GetLockoutEnabledAsync(TUser user, CancellationToken cancellationToken)
+        public Task<bool> GetLockoutEnabledAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
             return Task.FromResult(user.LockoutEnabled);
         }
 
         /// <inheritdoc />
-        public virtual Task SetLockoutEnabledAsync(TUser user, bool enabled, CancellationToken cancellationToken)
+        public Task SetLockoutEnabledAsync(TUser user, bool enabled, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
             user.LockoutEnabled = enabled;
             return Task.CompletedTask;
         }
@@ -640,16 +639,15 @@ namespace Raven.Identity
         #region IUserTwoFactorStore implementation
 
         /// <inheritdoc />
-        public virtual Task SetTwoFactorEnabledAsync(TUser user, bool enabled, CancellationToken cancellationToken)
+        public Task SetTwoFactorEnabledAsync(TUser user, bool enabled, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
             user.TwoFactorEnabled = enabled;
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public virtual Task<bool> GetTwoFactorEnabledAsync(TUser user, CancellationToken cancellationToken)
+        public Task<bool> GetTwoFactorEnabledAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
 
@@ -661,23 +659,25 @@ namespace Raven.Identity
         #region IUserPhoneNumberStore implementation
 
         /// <inheritdoc />
-        public virtual Task SetPhoneNumberAsync(TUser user, string? phoneNumber, CancellationToken cancellationToken)
+        public Task SetPhoneNumberAsync(TUser user, string? phoneNumber, CancellationToken cancellationToken)
         {
+            ThrowIfNullDisposedCancelled(user, cancellationToken);
             user.PhoneNumber = phoneNumber;
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public virtual Task<string?> GetPhoneNumberAsync(TUser user, CancellationToken cancellationToken) =>
+        public Task<string?> GetPhoneNumberAsync(TUser user, CancellationToken cancellationToken) =>
             Task.FromResult(user.PhoneNumber);
 
         /// <inheritdoc />
-        public virtual Task<bool> GetPhoneNumberConfirmedAsync(TUser user, CancellationToken cancellationToken) =>
+        public Task<bool> GetPhoneNumberConfirmedAsync(TUser user, CancellationToken cancellationToken) =>
             Task.FromResult(user.PhoneNumberConfirmed);
 
         /// <inheritdoc />
-        public virtual Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
+        public Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
         {
+            ThrowIfNullDisposedCancelled(user, cancellationToken);
             user.PhoneNumberConfirmed = confirmed;
             return Task.CompletedTask;
         }
@@ -687,14 +687,15 @@ namespace Raven.Identity
         #region IUserAuthenticatorKeyStore implementation
 
         /// <inheritdoc />
-        public virtual Task SetAuthenticatorKeyAsync(TUser user, string key, CancellationToken cancellationToken)
+        public Task SetAuthenticatorKeyAsync(TUser user, string key, CancellationToken cancellationToken)
         {
+            ThrowIfNullDisposedCancelled(user, cancellationToken);
             user.TwoFactorAuthenticatorKey = key;
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public virtual Task<string?> GetAuthenticatorKeyAsync(TUser user, CancellationToken cancellationToken)
+        public Task<string?> GetAuthenticatorKeyAsync(TUser user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.TwoFactorAuthenticatorKey);
         }
@@ -704,8 +705,9 @@ namespace Raven.Identity
         #region IUserAuthenticationTokenStore
 
         /// <inheritdoc />
-        public virtual Task SetTokenAsync(TUser user, string loginProvider, string name, string? value, CancellationToken cancellationToken)
+        public Task SetTokenAsync(TUser user, string loginProvider, string name, string? value, CancellationToken cancellationToken)
         {
+            ThrowIfNullDisposedCancelled(user, cancellationToken);
             if (value == null)
             {
                 throw new ArgumentNullException(nameof(value));
@@ -729,34 +731,34 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public virtual Task RemoveTokenAsync(TUser user, string loginProvider, string name, CancellationToken cancellationToken)
+        public Task RemoveTokenAsync(TUser user, string loginProvider, string name, CancellationToken cancellationToken)
         {
             user.Tokens.RemoveAll(t => t.LoginProvider == loginProvider && t.Name == name);
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public virtual Task<string?> GetTokenAsync(TUser user, string loginProvider, string name, CancellationToken cancellationToken)
+        public Task<string?> GetTokenAsync(TUser user, string loginProvider, string name, CancellationToken cancellationToken)
         {
             var tokenOrNull = user.Tokens.FirstOrDefault(t => t.LoginProvider == loginProvider && t.Name == name);
             return Task.FromResult(tokenOrNull?.Value);
         }
 
         /// <inheritdoc />
-        public virtual Task ReplaceCodesAsync(TUser user, IEnumerable<string> recoveryCodes, CancellationToken cancellationToken)
+        public Task ReplaceCodesAsync(TUser user, IEnumerable<string> recoveryCodes, CancellationToken cancellationToken)
         {
-            user.TwoFactorRecoveryCodes = new List<string>(recoveryCodes);
+            user.TwoFactorRecoveryCodes = [..recoveryCodes];
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public virtual Task<bool> RedeemCodeAsync(TUser user, string code, CancellationToken cancellationToken)
+        public Task<bool> RedeemCodeAsync(TUser user, string code, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.TwoFactorRecoveryCodes.Remove(code));
         }
 
         /// <inheritdoc />
-        public virtual Task<int> CountCodesAsync(TUser user, CancellationToken cancellationToken)
+        public Task<int> CountCodesAsync(TUser user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.TwoFactorRecoveryCodes.Count);
         }
@@ -768,24 +770,14 @@ namespace Raven.Identity
         /// <summary>
         /// Gets the users as an IQueryable.
         /// </summary>
-        public virtual IQueryable<TUser> Users => DbSession.Query<TUser>();
+        public IQueryable<TUser> Users => DbSession.Query<TUser>();
 
         #endregion
 
         /// <summary>
         /// Gets access to current session being used by this store.
         /// </summary>
-        protected IAsyncDocumentSession DbSession
-        {
-            get
-            {
-                if (_session == null)
-                {
-                    _session = _getSessionFunc!();
-                }
-                return _session;
-            }
-        }
+        private IAsyncDocumentSession DbSession => _session ??= _getSessionFunc!();
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private void ThrowIfNullDisposedCancelled(TUser user, CancellationToken token)
@@ -816,7 +808,7 @@ namespace Raven.Identity
         /// <param name="email"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        protected virtual Task<CompareExchangeResult<string>> CreateEmailReservationAsync(string email, string id)
+        private Task<CompareExchangeResult<string>> CreateEmailReservationAsync(string email, string id)
 		{
 			var compareExchangeKey = Conventions.CompareExchangeKeyFor(email);
 			var reserveEmailOperation = new PutCompareExchangeValueOperation<string>(compareExchangeKey, id, 0);
@@ -829,7 +821,7 @@ namespace Raven.Identity
         /// <param name="email"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        protected virtual async Task<CompareExchangeResult<string>> UpdateEmailReservationAsync(string email, string id)
+        private async Task<CompareExchangeResult<string>> UpdateEmailReservationAsync(string email, string id)
         {
             var key = Conventions.CompareExchangeKeyFor(email);
             var store = DbSession.Advanced.DocumentStore;
@@ -850,7 +842,7 @@ namespace Raven.Identity
 		/// </summary>
 		/// <param name="email"></param>
 		/// <returns></returns>
-		protected virtual async Task<CompareExchangeResult<string>> DeleteEmailReservation(string email)
+        private async Task<CompareExchangeResult<string>> DeleteEmailReservation(string email)
         {
             var key = Conventions.CompareExchangeKeyFor(email);
             var store = DbSession.Advanced.DocumentStore;

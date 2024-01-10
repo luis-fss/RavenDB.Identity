@@ -11,7 +11,7 @@ namespace Raven.Identity
     /// </summary>
     public class IdentityUser
     {
-        private List<string> _roles = new List<string>();
+        private List<string> _roles = [];
 
         /// <summary>
         /// The ID of the user.
@@ -94,22 +94,22 @@ namespace Raven.Identity
         /// <summary>
         /// The user's claims, for use in claims-based authentication.
         /// </summary>
-        public virtual List<IdentityUserClaim> Claims { get; private set; } = new List<IdentityUserClaim>();
+        public virtual List<IdentityUserClaim> Claims { get; private set; } = [];
 
         /// <summary>
         /// The logins of the user.
         /// </summary>
-        public virtual List<UserLoginInfo> Logins { get; private set; } = new List<UserLoginInfo>();
+        public virtual List<UserLoginInfo> Logins { get; private set; } = [];
 
         /// <summary>
         /// The list of two factor authentication recovery codes.
         /// </summary>
-        public virtual List<string> TwoFactorRecoveryCodes { get; set; } = new List<string>();
+        public virtual List<string> TwoFactorRecoveryCodes { get; set; } = [];
 
         /// <summary>
         /// The list authorization tokens from 3rd party authentication, e.g. Google, Microsoft, GitHub, etc.
         /// </summary>
-        public virtual List<IdentityUserAuthToken> Tokens { get; set; } = new List<IdentityUserAuthToken>();
+        public virtual List<IdentityUserAuthToken> Tokens { get; set; } = [];
 
         /// <summary>
         /// Gets the mutable roles list. This shouldn't be modified by user code; roles should be changed via UserManager instead.
