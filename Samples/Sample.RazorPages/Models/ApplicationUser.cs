@@ -1,6 +1,6 @@
 ﻿namespace Sample.RazorPages.Models
 {
-    public class AppUser : Raven.Identity.IdentityUser
+    public class ApplicationUser : Raven.Identity.IdentityUser
     {
         /// <summary>
         /// The user's full name.

@@ -5,11 +5,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Raven.Client.Documents;
-using Raven.DependencyInjection;
 using Raven.Identity;
 using Sample.Mvc.Common;
 using Sample.Mvc.Models;
 using System.Collections.Generic;
+using RavenDB.DependencyInjection;
 
 namespace Sample.Mvc
 {
@@ -34,10 +34,10 @@ namespace Sample.Mvc
             });
 
             services
-                .AddRavenDbDocStore() // Create our IDocumentStore singleton using the database settings in appsettings.json
+                .AddRavenDbDocumentStore() // Create our IDocumentStore singleton using the database settings in appsettings.json
                 .AddRavenDbAsyncSession() // Create an Raven IAsyncDocumentSession for every request.
-                .AddIdentity<AppUser, IdentityRole>() // Tell ASP.NET to use identity framework.
-                .AddRavenDbIdentityStores<AppUser, IdentityRole>(); // Use Raven as the Identity store for user users and roles.
+                .AddIdentity<ApplicationUser, IdentityRole>() // Tell ASP.NET to use identity framework.
+                .AddRavenDbIdentityStores<ApplicationUser, IdentityRole>(); // Use Raven as the Identity store for user users and roles.
 
             services.AddControllersWithViews();
         }
@@ -69,7 +69,7 @@ namespace Sample.Mvc
             // Also, create our roles if they don't exist. Needed because we're doing some role-based auth in this demo.
             var docStore = app.ApplicationServices.GetRequiredService<IDocumentStore>();
             docStore.EnsureExists();
-            docStore.EnsureRolesExist(new List<string> { AppUser.AdminRole, AppUser.ManagerRole });
+            docStore.EnsureRolesExist(new List<string> { ApplicationUser.AdminRole, ApplicationUser.ManagerRole });
 
             app.UseEndpoints(endpoints =>
             {

@@ -14,11 +14,6 @@
 
 
   <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
-
-
-  <ItemGroup>
     <ProjectReference Include="..\..\RavenDB.Identity\RavenDB.Identity.csproj" />
   </ItemGroup>
 

@@ -10,13 +10,13 @@ namespace Sample.Mvc.Controllers
 {
     public class AccountController : RavenController
     {
-        private readonly SignInManager<AppUser> _signInManager;
-        private readonly UserManager<AppUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         
         public AccountController(
             IAsyncDocumentSession dbSession, // injected thanks to Startup.cs call to services.AddRavenDbAsyncSession()
-            UserManager<AppUser> userManager, // injected thanks to Startup.cs call to services.AddRavenDbIdentity<AppUser>()
-            SignInManager<AppUser> signInManager) // injected thanks to Startup.cs call to services.AddRavenDbIdentity<AppUser>()
+            UserManager<ApplicationUser> userManager, // injected thanks to Startup.cs call to services.AddRavenDbIdentity<AppUser>()
+            SignInManager<ApplicationUser> signInManager) // injected thanks to Startup.cs call to services.AddRavenDbIdentity<AppUser>()
             : base(dbSession)
         {
             this._userManager = userManager;
@@ -62,7 +62,7 @@ namespace Sample.Mvc.Controllers
         public async Task<IActionResult> Register(RegisterModel model)
         {
             // Create the user.
-            var appUser = new AppUser
+            var appUser = new ApplicationUser
             {
                 Email = model.Email,
                 UserName = model.Email
@@ -75,7 +75,7 @@ namespace Sample.Mvc.Controllers
             }
 
             // Add him to a role.
-            await _userManager.AddToRoleAsync(appUser, AppUser.ManagerRole);
+            await _userManager.AddToRoleAsync(appUser, ApplicationUser.ManagerRole);
 
             // Sign him in and go home.
             await _signInManager.SignInAsync(appUser, true);

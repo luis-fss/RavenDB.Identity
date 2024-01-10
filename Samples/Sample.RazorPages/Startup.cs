@@ -5,8 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Raven.Client.Documents;
-using Raven.DependencyInjection;
 using Raven.Identity;
+using RavenDB.DependencyInjection;
 using Sample.RazorPages.Common;
 using Sample.RazorPages.Filters;
 using Sample.RazorPages.Models;
@@ -27,13 +27,13 @@ namespace Sample.RazorPages
         {
             // Configure Raven Identity in just a few lines of code:
             services
-                .AddRavenDbDocStore() // 1. Configures Raven connection using the settings in appsettings.json.
+                .AddRavenDbDocumentStore() // 1. Configures Raven connection using the settings in appsettings.json.
                 .AddRavenDbAsyncSession(); // 2. Add a scoped IAsyncDocumentSession. For the sync version, use .AddRavenSession() instead.
 
             // 3. Add our RavenDB.Identity provider.
             var identityBuilder = services
-                .AddDefaultIdentity<AppUser>()
-                .AddRavenDbIdentityStores<AppUser>();
+                .AddDefaultIdentity<ApplicationUser>()
+                .AddRavenDbIdentityStores<ApplicationUser>();
 
             // 4. Optional: some default UI pages for register/login/password reset/etc.
             identityBuilder.AddDefaultUI();

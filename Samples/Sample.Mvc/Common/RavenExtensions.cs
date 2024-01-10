@@ -13,7 +13,7 @@ namespace Sample.Mvc.Common
             {
                 using var dbSession = store.OpenSession();
                 // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-                dbSession.Query<AppUser>().Take(0).ToList();
+                dbSession.Query<ApplicationUser>().Take(0).ToList();
             }
             catch (Raven.Client.Exceptions.Database.DatabaseDoesNotExistException)
             {

@@ -10,8 +10,8 @@
     <div class="form-group">
         <label for="inputRole">Roles:</label>
         <select class="form-control" id="inputRole" name="Roles" multiple size="2">
-            <option selected="@User.IsInRole(AppUser.ManagerRole)">@AppUser.ManagerRole</option>
-            <option selected="@User.IsInRole(AppUser.AdminRole)">@AppUser.AdminRole</option>
+            <option selected="@User.IsInRole(ApplicationUser.ManagerRole)">@ApplicationUser.ManagerRole</option>
+            <option selected="@User.IsInRole(ApplicationUser.AdminRole)">@ApplicationUser.AdminRole</option>
         </select>
         <small class="form-text text-muted">
             Use CTRL to select multiple

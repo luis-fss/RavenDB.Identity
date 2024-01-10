@@ -1,6 +1,6 @@
 ﻿namespace Sample.Mvc.Models
 {
-    public class AppUser : Raven.Identity.IdentityUser
+    public class ApplicationUser : Raven.Identity.IdentityUser
     {
         public const string AdminRole = "Admin";
         public const string ManagerRole = "Manager";

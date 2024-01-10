@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Raven.Client.Documents;
-using Raven.DependencyInjection;
 using Raven.Identity;
+using RavenDB.DependencyInjection;
 using Sample.BlazorApp.Components;
 using Sample.BlazorApp.Components.Account;
 using Sample.BlazorApp.Data;
@@ -38,7 +38,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuth
 // Add RavenDB and identity.
 builder.Services
     // Create an IDocumentStore singleton from the RavenSettings.
-    .AddRavenDbDocStore()
+    .AddRavenDbDocumentStore()
     // Create a RavenDB IAsyncDocumentSession for each request. You're responsible for calling .SaveChanges after each request.
     .AddRavenDbAsyncSession()
     // Adds an identity system to ASP.NET Core

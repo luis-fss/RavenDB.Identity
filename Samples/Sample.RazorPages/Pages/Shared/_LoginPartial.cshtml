@@ -1,7 +1,7 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Sample.RazorPages.Models
-@inject SignInManager<AppUser> SignInManager
+@inject SignInManager<ApplicationUser> SignInManager
 
 <ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))

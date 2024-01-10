@@ -10,7 +10,7 @@ namespace Sample.Mvc.Controllers
     {
         public IActionResult Index()
         {
-            var allRoles = new[] { AppUser.AdminRole, AppUser.ManagerRole };
+            var allRoles = new[] { ApplicationUser.AdminRole, ApplicationUser.ManagerRole };
             var userRoles = string.Join(", ", allRoles.Where(r => User.IsInRole(r)));
             
             ViewBag.UserRoles = userRoles;
@@ -18,7 +18,7 @@ namespace Sample.Mvc.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = AppUser.AdminRole)]
+        [Authorize(Roles = ApplicationUser.AdminRole)]
         public IActionResult AdminOnly()
         {
             return View();
