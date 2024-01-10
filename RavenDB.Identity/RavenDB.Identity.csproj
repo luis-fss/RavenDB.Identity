@@ -1,6 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Version>1.0.0</Version>
+    <ReleaseNotes>.NET8 migration, code cleanups and dependencies upgrades.</ReleaseNotes>
+    <PackageReleaseNotes>.NET8 migration, code cleanups and dependencies upgrades.</PackageReleaseNotes>
     <Description>The simple and easy RavenDB Identity provider for ASP.NET Core. Use Raven to store your users and logins with just a few lines of code.</Description>
     <Authors>Judah Gabriel Himango, Luis Fernando de Souza Santos</Authors>
     <TargetFramework>net8.0</TargetFramework>
@@ -17,23 +20,27 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>1.0.0</Version>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <RootNamespace>Raven.Identity</RootNamespace>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <ReleaseNotes>.NET8 migration, code cleanups and dependencies upgrades.</ReleaseNotes>
-    <PackageReleaseNotes>.NET8 migration, code cleanups and dependencies upgrades.</PackageReleaseNotes>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <nullable>enable</nullable>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="nuget-icon.png" Pack="true" PackagePath="" />
+    <None Include="..\Readme.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="RavenDB.Client" Version="6.0.2" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-    <None Include="nuget-icon.png" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup>
