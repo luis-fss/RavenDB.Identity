@@ -61,6 +61,8 @@ builder.Services
     //.AddSignInManager()
     .AddDefaultTokenProviders();
 
+builder.Services.AddAuthorizationBuilder().AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
+
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 var app = builder.Build();
