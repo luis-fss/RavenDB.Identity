@@ -10,7 +10,7 @@ namespace Raven.Identity
         /// <summary>
         /// The prefix used for compare/exchange values used by RavenDB.Identity to ensure user uniqueness based on email address.
         /// </summary>
-        public const string EmailReservationKeyPrefix = "emails/";
+        public const string EmailReservationKeyPrefix = "identity-emails/";
 
         /// <summary>
         /// Gets the compare/exchange key used to store the specified email address.
