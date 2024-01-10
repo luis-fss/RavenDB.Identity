@@ -18,23 +18,6 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
-// builder.Services.AddAuthentication(options =>
-//     {
-//         options.DefaultScheme = IdentityConstants.ApplicationScheme;
-//         options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-//     })
-//     .AddIdentityCookies();
-
-// var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-// builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//     options.UseSqlite(connectionString));
-// builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-//
-// builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-//     .AddEntityFrameworkStores<ApplicationDbContext>()
-//     .AddSignInManager()
-//     .AddDefaultTokenProviders();
-
 // Add RavenDB and identity.
 builder.Services
     // Create an IDocumentStore singleton from the RavenSettings.
@@ -58,7 +41,6 @@ builder.Services
     // Use RavenDB as the store for identity users and roles. Specify your app user type here, and your role type.
     // If you don't have a role type, use Raven.Identity.IdentityRole.
     .AddRavenDbIdentityStores<ApplicationUser, Raven.Identity.IdentityRole>()
-    //.AddSignInManager()
     .AddDefaultTokenProviders();
 
 builder.Services.AddAuthorizationBuilder().AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
@@ -83,10 +65,6 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
-
-// Instruct ASP.NET Core to use authentication and authorization.
-// app.UseAuthentication();
-// app.UseAuthorization();
 
 // Create the database if it doesn't exist.
 // Also, create our roles if they don't exist. Needed because we're doing some role-based auth in this demo.
