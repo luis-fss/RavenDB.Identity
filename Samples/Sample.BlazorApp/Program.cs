@@ -17,6 +17,10 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+// Policies configuration
+builder.Services.AddAuthorizationBuilder().AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
 
 // Add RavenDB and identity.
 builder.Services
@@ -44,10 +48,6 @@ builder.Services
     // If you don't have a role type, use Raven.Identity.IdentityRole.
     .AddRavenDbIdentityStores<ApplicationUser, Raven.Identity.IdentityRole>()
     .AddDefaultTokenProviders();
-
-builder.Services.AddAuthorizationBuilder().AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
-
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 var app = builder.Build();
 
