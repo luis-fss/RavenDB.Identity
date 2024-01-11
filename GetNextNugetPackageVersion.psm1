@@ -1,8 +1,8 @@
 Function GetNextNugetPackageVersion {
 
-	$json = Invoke-RestMethod -Uri "https://api.nuget.org/v3/registration5-semver1/ravendb.identity/index.json"
+	$json = Invoke-RestMethod -Uri "https://api.nuget.org/v3/registration5-semver1/luis.ravendb.identity/index.json"
 	$package = $json.items[0]
-	$latestPackageIndex = $package.items.Length - 1;
+	$latestPackageIndex = $package.items.Length - 1
 	$latestPackage = $package.items[$latestPackageIndex]
 	$versionStr = $latestPackage.catalogEntry.version
 	

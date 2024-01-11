@@ -1,0 +1,15 @@
+﻿@page "/Account/AccessDenied"
+
+<PageTitle>Access Denied</PageTitle>
+
+<header>
+    <h1 class="text-danger">Access Denied</h1>
+    <p class="text-danger">This account doesn't have access to <a href="@ReturnUrl">@ReturnUrl</a> page.</p>
+</header>
+
+
+@code {
+
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; } = "default";
+
+}

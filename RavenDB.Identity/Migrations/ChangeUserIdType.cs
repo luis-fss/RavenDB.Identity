@@ -4,7 +4,6 @@ using Raven.Client.Documents.Operations.CompareExchange;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Raven.Identity.Migrations
 {
@@ -15,7 +14,7 @@ namespace Raven.Identity.Migrations
     public class ChangeUserIdType<TUser> : MigrationBase
         where TUser : IdentityUser
     {
-        private readonly UserIdType newUserIdType;
+        private readonly UserIdType _newUserIdType;
 
         /// <summary>
         /// Creates a new ChangeUserIdType migration.
@@ -25,7 +24,7 @@ namespace Raven.Identity.Migrations
         public ChangeUserIdType(IDocumentStore db, UserIdType newUserIdType)
             : base(db)
         {
-            this.newUserIdType = newUserIdType;
+            _newUserIdType = newUserIdType;
         }
 
         /// <summary>
@@ -43,13 +42,13 @@ namespace Raven.Identity.Migrations
             // Step 4, delete all the users with old IDs
 
             // 1. Grab all the existing users.
-            var existingUserStream = this.StreamWithMetadata<TUser>();
+            var existingUserStream = StreamWithMetadata<TUser>();
 
             // Step 2: recreate each user with new IDs
             var userIdsToDelete = CloneUserWithNewId(existingUserStream);
 
             // Step 3: Update all the email reservations to point to the new users.
-            var newUsers = this.Stream<TUser>()
+            var newUsers = Stream<TUser>()
                 .Where(u => !userIdsToDelete.Contains(u.Id, StringComparer.OrdinalIgnoreCase)) // Exclude the old users; we're going to delete those momentarily if everything else succeeds.
                 .Select(u => (email: u.Email, id: u.Id!))
                 .ToList();
@@ -62,7 +61,7 @@ namespace Raven.Identity.Migrations
             }
 
             // Step 4, delete the old users.
-            using var dbSession = docStore.OpenSession();
+            using var dbSession = DocStore.OpenSession();
             userIdsToDelete.ForEach(dbSession.Delete);
             dbSession.SaveChanges();
         }
@@ -70,20 +69,20 @@ namespace Raven.Identity.Migrations
         private List<string> CloneUserWithNewId(IEnumerable<StreamResult<TUser>> users)
         {
             var userIdsToDelete = new List<string>(CountUsers());
-            var nextUserId = this.newUserIdType == UserIdType.Consecutive ? 
+            var nextUserId = _newUserIdType == UserIdType.Consecutive ?
                 GetNextIdForUser() : 
                 -1;
-            using var bulkInsert = docStore.BulkInsert();
+            using var bulkInsert = DocStore.BulkInsert();
             foreach (var userStream in users)
             {
                 var user = userStream.Document;
 
                 // Figure out what the new ID will be.
-                var newId = Conventions.UserIdFor(user, this.newUserIdType, this.docStore);
-                if (this.newUserIdType == UserIdType.Consecutive && newId != null && newId.EndsWith("|"))
+                var newId = Conventions.UserIdFor(user, _newUserIdType, DocStore);
+                if (_newUserIdType == UserIdType.Consecutive && newId != null && newId.EndsWith("|"))
                 {
                     // We'll need to specify the full ID, as bulk insert doens't work with "Users|" type IDs.
-                    newId = Conventions.CollectionNameWithSeparator<TUser>(docStore) + nextUserId.ToString();
+                    newId = Conventions.CollectionNameWithSeparator<TUser>(DocStore) + nextUserId.ToString();
                     nextUserId++;
                 }
 
@@ -120,21 +119,21 @@ namespace Raven.Identity.Migrations
 
         private int CountUsers()
         {
-            using var dbSession = docStore.OpenSession();
+            using var dbSession = DocStore.OpenSession();
             return dbSession.Query<TUser>().Count();
         }
 
         private long GetNextIdForUser()
         {
-            var getIdsCommand = new NextIdentityForCommand(Conventions.CollectionNameFor<TUser>(docStore));
-            using var dbSession = docStore.OpenSession();
+            var getIdsCommand = new NextIdentityForCommand(Conventions.CollectionNameFor<TUser>(DocStore));
+            using var dbSession = DocStore.OpenSession();
             dbSession.Advanced.RequestExecutor.Execute(getIdsCommand, dbSession.Advanced.Context);
             return getIdsCommand.Result;
         }
 
         private void UpdateEmailReservation(string email, string userId)
         {
-            var emailReservation = this.GetEmailReservation(email);
+            var emailReservation = GetEmailReservation(email);
             var index = emailReservation?.Index ?? 0;
             var needsUpdate = !string.Equals(emailReservation?.Value, userId, StringComparison.OrdinalIgnoreCase);
             if (needsUpdate)
@@ -151,14 +150,14 @@ namespace Raven.Identity.Migrations
         {
             var key = Conventions.CompareExchangeKeyFor(email);
             var newEmailReservation = new PutCompareExchangeValueOperation<string>(key, userId, index);
-            return docStore.Operations.Send(newEmailReservation);
+            return DocStore.Operations.Send(newEmailReservation);
         }
 
         private CompareExchangeValue<string>? GetEmailReservation(string email)
         {
             var key = Conventions.CompareExchangeKeyFor(email);
             var getReservation = new GetCompareExchangeValueOperation<string>(key);
-            return docStore.Operations.Send(getReservation);
+            return DocStore.Operations.Send(getReservation);
         }
     }
 }

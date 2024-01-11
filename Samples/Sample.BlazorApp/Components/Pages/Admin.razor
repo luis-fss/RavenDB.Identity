@@ -1,0 +1,13 @@
+﻿@page "/admin"
+
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Policy = "AdminPolicy")]
+
+<PageTitle>Admin</PageTitle>
+
+<h1>You have the Admin role</h1>
+
+<AuthorizeView>
+    Hello @context.User.Identity?.Name!
+</AuthorizeView>

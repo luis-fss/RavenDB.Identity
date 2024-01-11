@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Raven.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Raven.Client.Documents.Session;
 using Raven.Client.Exceptions;
@@ -35,7 +32,7 @@ namespace Raven.Identity
             IEnumerable<IRoleValidator<TRole>> roleValidators,
             ILookupNormalizer keyNormalizer,
             IdentityErrorDescriber errors,
-            ILogger<RoleManager<TRole>> logger) :
+            ILogger<RoleMan<TRole>> logger) :
             base(store, roleValidators, keyNormalizer, errors, logger)
         {
         }
@@ -129,7 +126,7 @@ namespace Raven.Identity
         /// <summary>
         /// Gets the roles as an IQueryable.
         /// </summary>
-        public virtual IQueryable<TRole> Roles => this.AsyncSession.Query<TRole>();
+        public virtual IQueryable<TRole> Roles => AsyncSession.Query<TRole>();
 
         #endregion
 
@@ -219,7 +216,7 @@ namespace Raven.Identity
         /// <param name="role">The role whose ID should be returned.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>A <see cref="Task{TResult}"/> that contains the ID of the role.</returns>
-        public virtual Task<string?> GetRoleIdAsync(TRole role, CancellationToken cancellationToken = default)
+        public virtual Task<string> GetRoleIdAsync(TRole role, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
@@ -228,7 +225,7 @@ namespace Raven.Identity
                 throw new ArgumentNullException(nameof(role));
             }
 
-            return Task.FromResult(role.Id);
+            return Task.FromResult(role.Id)!;
         }
 
         /// <summary>
@@ -237,7 +234,7 @@ namespace Raven.Identity
         /// <param name="role">The role whose name should be returned.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>A <see cref="Task{TResult}"/> that contains the name of the role.</returns>
-        public virtual Task<string> GetRoleNameAsync(TRole role, CancellationToken cancellationToken = default)
+        public virtual Task<string?> GetRoleNameAsync(TRole role, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
@@ -245,7 +242,7 @@ namespace Raven.Identity
             {
                 throw new ArgumentNullException(nameof(role));
             }
-            return Task.FromResult(role.Name);
+            return Task.FromResult(role.Name)!;
         }
 
         /// <summary>
@@ -255,7 +252,7 @@ namespace Raven.Identity
         /// <param name="roleName">The name of the role.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>The <see cref="Task"/> that represents the asynchronous operation.</returns>
-        public virtual Task SetRoleNameAsync(TRole role, string roleName, CancellationToken cancellationToken = default)
+        public virtual Task SetRoleNameAsync(TRole role, string? roleName, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
@@ -263,7 +260,7 @@ namespace Raven.Identity
             {
                 throw new ArgumentNullException(nameof(role));
             }
-            role.Name = roleName;
+            role.Name = roleName ?? throw new ArgumentNullException(nameof(roleName));
             return Task.CompletedTask;
         }
 
@@ -273,11 +270,11 @@ namespace Raven.Identity
         /// <param name="id">The role ID to look for.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>A <see cref="Task{TResult}"/> that result of the look up.</returns>
-        public virtual Task<TRole> FindByIdAsync(string id, CancellationToken cancellationToken = default)
+        public virtual Task<TRole?> FindByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
-            return AsyncSession.LoadAsync<TRole>(id, cancellationToken);
+            return AsyncSession.LoadAsync<TRole>(id, cancellationToken)!;
         }
 
         /// <summary>
@@ -286,13 +283,13 @@ namespace Raven.Identity
         /// <param name="normalizedName">The normalized role name to look for.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>A <see cref="Task{TResult}"/> that result of the look up.</returns>
-        public virtual Task<TRole> FindByNameAsync(string normalizedName, CancellationToken cancellationToken = default)
+        public virtual Task<TRole?> FindByNameAsync(string normalizedName, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
 
             var roleId = GetRavenIdFromRoleName(normalizedName, AsyncSession.Advanced.DocumentStore);
-            return AsyncSession.LoadAsync<TRole>(roleId);
+            return AsyncSession.LoadAsync<TRole>(roleId)!;
         }
 
         /// <summary>
@@ -301,7 +298,7 @@ namespace Raven.Identity
         /// <param name="role">The role whose normalized name should be retrieved.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>A <see cref="Task{TResult}"/> that contains the name of the role.</returns>
-        public virtual Task<string> GetNormalizedRoleNameAsync(TRole role, CancellationToken cancellationToken = default)
+        public virtual Task<string?> GetNormalizedRoleNameAsync(TRole role, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
@@ -310,7 +307,7 @@ namespace Raven.Identity
                 throw new ArgumentNullException(nameof(role));
             }
 
-            return Task.FromResult(role.Name.ToLowerInvariant());
+            return Task.FromResult(role.Name.ToLowerInvariant())!;
         }
 
         /// <summary>
@@ -320,7 +317,7 @@ namespace Raven.Identity
         /// <param name="normalizedName">The normalized name to set</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>The <see cref="Task"/> that represents the asynchronous operation.</returns>
-        public virtual Task SetNormalizedRoleNameAsync(TRole role, string normalizedName, CancellationToken cancellationToken = default)
+        public virtual Task SetNormalizedRoleNameAsync(TRole role, string? normalizedName, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
@@ -328,7 +325,7 @@ namespace Raven.Identity
             {
                 throw new ArgumentNullException(nameof(role));
             }
-            //role.Name = normalizedName;
+            role.Name = normalizedName ?? throw new ArgumentNullException(nameof(normalizedName));
             return Task.FromResult(0);
         }
 

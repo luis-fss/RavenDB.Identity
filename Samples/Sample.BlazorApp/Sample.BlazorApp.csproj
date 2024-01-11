@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>aspnet-Sample.BlazorApp-A95F6760-D2F0-4838-A73C-C56E5B75EB71</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\RavenDB.Identity\RavenDB.Identity.csproj" />
+    </ItemGroup>
+
+</Project>

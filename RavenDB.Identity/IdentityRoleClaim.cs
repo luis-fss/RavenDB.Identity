@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Text;
+﻿using System.Security.Claims;
 
 namespace Raven.Identity
 {
@@ -35,8 +32,8 @@ namespace Raven.Identity
         /// <param name="other">The claim to initialize from.</param>
         public virtual void InitializeFromClaim(Claim other)
         {
-            ClaimType = other?.Type;
-            ClaimValue = other?.Value;
+            ClaimType = other.Type;
+            ClaimValue = other.Value;
         }
     }
 }
