@@ -37,7 +37,7 @@ public class ApplicationUser : Raven.Identity.IdentityUser
     "Urls": [
         "http://live-test.ravendb.net"
     ],
-    "DatabaseName": "Raven.Identity.Sample.RazorPages",
+    "DatabaseName": "Raven.Identity.Sample.BlazorApp",
     "CertFilePath": "",
     "CertPassword": ""
 },
