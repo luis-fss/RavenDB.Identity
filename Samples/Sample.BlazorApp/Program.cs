@@ -54,7 +54,10 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // app.UseMigrationsEndPoint();
+    // Create the database if it doesn't exist.
+    // Also, create our roles if they don't exist. Needed because we're doing some role-based auth in this demo.
+    var docStore = app.Services.GetRequiredService<IDocumentStore>();
+    docStore.EnsureDatabaseExists().EnsureRolesExist([ApplicationUser.AdminRole, ApplicationUser.ManagerRole]);
 }
 else
 {
@@ -67,11 +70,6 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
-
-// Create the database if it doesn't exist.
-// Also, create our roles if they don't exist. Needed because we're doing some role-based auth in this demo.
-var docStore = app.Services.GetRequiredService<IDocumentStore>();
-docStore.EnsureDatabaseExists().EnsureRolesExist([ApplicationUser.AdminRole, ApplicationUser.ManagerRole]);
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
