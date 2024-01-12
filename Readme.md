@@ -7,10 +7,10 @@ This project is a fork of [JudahGabriel/RavenDB.Identity](https://github.com/Jud
 
 I created this fork because I like to keep my projects up-to-date with the latest versions of dotnet, and I intend to use this code in my own projects. It is not my intention to make it available and/or maintain a package for general public use. Although at some point, I may publish a NuGet package, I strongly discourage its use by third parties. I won't consider potential incompatibilities in future changes. The original license remains intact, so anyone is still free to copy the code and use it as they wish.
 
-<a id="fork-changes">How does this project differ from the original?</a>
+<a id="fork-changes">How does this repository differs from the original?</a>
 
 1. All projects have been updated to the latest version of dotnet, and all third-party dependencies have also been updated.
-2. The SaveChangesAsync method was added to the UserStore.UpdateAsync method. I think it's better this way, but I still need to conduct some tests, so this may change, and I am also considering creating an option that can be configured at the time of service registration, enabling or disabling this feature;
+2. The UserStore.UpdateAsync method can automatically persist data, there is an option that can be configured at the time of service registration, enabling or disabling this feature `.AddRavenDbIdentityStores<ApplicationUser>(options => options.AutoSaveChanges = true)` it's enabled by default;
 3. The source code of the RavenDB.DependencyInjection project was added to facilitate dependency management and updates.
 4. The default email key reservation prefix was changed from "emails/" to "identity-emails/".
 5. An example Blazor Web App project was added.

@@ -209,7 +209,10 @@ namespace Raven.Identity
                 _logger.LogTrace("User {UserId} did not have modified Email, saving normally", user.Id);
 
                 // Email didn't change, so no reservation to update. Just save the user data
-                await DbSession.SaveChangesAsync(cancellationToken);
+                if (_options.Value.AutoSaveChanges)
+                {
+                    await DbSession.SaveChangesAsync(cancellationToken);
+                }
                 return IdentityResult.Success;
             }
 
@@ -240,7 +243,10 @@ namespace Raven.Identity
             }
 
             // Email reservation done, now we save the user data
-            await DbSession.SaveChangesAsync(cancellationToken);
+            if (_options.Value.AutoSaveChanges)
+            {
+                await DbSession.SaveChangesAsync(cancellationToken);
+            }
 
             await TryRemoveMigratedEmailReservation(oldEmail, user.Email);
             return IdentityResult.Success;

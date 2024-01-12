@@ -46,7 +46,7 @@ builder.Services
     })
     // Use RavenDB as the store for identity users and roles. Specify your app user type here, and your role type.
     // If you don't have a role type, use Raven.Identity.IdentityRole.
-    .AddRavenDbIdentityStores<ApplicationUser, Raven.Identity.IdentityRole>()
+    .AddRavenDbIdentityStores<ApplicationUser>(options => options.AutoSaveChanges = true)
     .AddDefaultTokenProviders();
 
 var app = builder.Build();
