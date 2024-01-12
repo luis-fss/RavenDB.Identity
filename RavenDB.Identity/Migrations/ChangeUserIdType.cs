@@ -148,14 +148,14 @@ namespace Raven.Identity.Migrations
 
         private CompareExchangeResult<string> PutEmailReservation(string email, string userId, long index = 0)
         {
-            var key = Conventions.CompareExchangeKeyFor(email);
+            var key = Conventions.CompareExchangeKeyForEmail(email);
             var newEmailReservation = new PutCompareExchangeValueOperation<string>(key, userId, index);
             return DocStore.Operations.Send(newEmailReservation);
         }
 
         private CompareExchangeValue<string>? GetEmailReservation(string email)
         {
-            var key = Conventions.CompareExchangeKeyFor(email);
+            var key = Conventions.CompareExchangeKeyForEmail(email);
             var getReservation = new GetCompareExchangeValueOperation<string>(key);
             return DocStore.Operations.Send(getReservation);
         }

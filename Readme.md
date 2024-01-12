@@ -9,13 +9,14 @@ I created this fork because I like to keep my projects up-to-date with the lates
 
 <a id="fork-changes">How does this repository differs from the original?</a>
 
-1. All projects have been updated to the latest version of dotnet, and all third-party dependencies have also been updated.
-2. The UserStore.UpdateAsync method can automatically persist data, there is an option that can be configured at the time of service registration, enabling or disabling this feature `.AddRavenDbIdentityStores<ApplicationUser>(options => options.AutoSaveChanges = true)` it's enabled by default;
-3. The source code of the RavenDB.DependencyInjection project was added to facilitate dependency management and updates.
-4. The default email key reservation prefix was changed from "emails/" to "identity-emails/".
-5. An example Blazor Web App project was added.
-6. Additionally, I made some minor improvements to log messages, namespace usage, and code cleanups.
-7. Finally, I still intend to include a configuration to use a username that will not allow future changes, unlike the email, which is set during registration.
+1. All projects have been updated to the latest version of dotnet, and all third-party dependencies have also been updated;
+2. The user name can and must be different from the user's email, and must also be unique in the application;
+3. The UserStore.UpdateAsync method can automatically persist data, there is an option that can be configured at the time of service registration, enabling or disabling this feature `.AddRavenDbIdentityStores<ApplicationUser>(options => options.AutoSaveChanges = true)` it's enabled by default;
+4. The source code of the RavenDB.DependencyInjection project was added to facilitate dependency management and updates;
+5. The default email key reservation prefix was changed from "emails/" to "identity-emails/";
+6. An example Blazor Web App project was added;
+7. Additionally, I made some minor improvements to log messages, namespace usage, and code cleanups;
+8. Finally, I still intend to include a configuration to use a username that will not allow future changes, unlike the email, which is set during registration.
 
 ## Instructions ##
 

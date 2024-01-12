@@ -8,16 +8,31 @@ namespace Raven.Identity
     public static class Conventions
     {
         /// <summary>
+        /// The prefix used for compare/exchange values used by RavenDB.Identity to ensure user uniqueness based on user names.
+        /// </summary>
+        public const string UserNameReservationKeyPrefix = "identity-usernames/";
+
+        /// <summary>
         /// The prefix used for compare/exchange values used by RavenDB.Identity to ensure user uniqueness based on email address.
         /// </summary>
         public const string EmailReservationKeyPrefix = "identity-emails/";
+
+        /// <summary>
+        /// Gets the compare/exchange key used to store the specified user name.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static string CompareExchangeKeyForUserName(string name)
+        {
+            return UserNameReservationKeyPrefix + name.ToLowerInvariant();
+        }
 
         /// <summary>
         /// Gets the compare/exchange key used to store the specified email address.
         /// </summary>
         /// <param name="email"></param>
         /// <returns></returns>
-        public static string CompareExchangeKeyFor(string email)
+        public static string CompareExchangeKeyForEmail(string email)
         {
             return EmailReservationKeyPrefix + email.ToLowerInvariant();
         }

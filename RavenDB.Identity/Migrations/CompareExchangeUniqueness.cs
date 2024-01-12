@@ -46,7 +46,7 @@ namespace Raven.Identity.Migrations
             // Step 2: store each email as a compare/exchange value.
             foreach (var (id, email) in emails)
             {
-                var compareExchangeKey = Conventions.CompareExchangeKeyFor(email);
+                var compareExchangeKey = Conventions.CompareExchangeKeyForEmail(email);
                 var storeOperation = new PutCompareExchangeValueOperation<string>(compareExchangeKey, id, 0);
                 var storeResult = DocStore.Operations.Send(storeOperation);
                 if (!storeResult.Successful)
