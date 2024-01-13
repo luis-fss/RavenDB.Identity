@@ -6,6 +6,7 @@
 @using Sample.BlazorApp.Data
 
 @inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
@@ -23,9 +24,9 @@
                 <hr/>
                 <ValidationSummary class="text-danger" role="alert"/>
                 <div class="form-floating mb-3">
-                    <InputText id="email" @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com"/>
-                    <label for="email" class="form-label">Email</label>
-                    <ValidationMessage For="() => Input.Email" class="text-danger"/>
+                    <InputText id="usernameOrEmail" @bind-Value="Input.UserNameOrEmail" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com"/>
+                    <label for="usernameOrEmail" class="form-label">User Name or Email</label>
+                    <ValidationMessage For="() => Input.UserNameOrEmail" class="text-danger"/>
                 </div>
                 <div class="form-floating mb-3">
                     <InputText id="password" type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password"/>
@@ -84,9 +85,18 @@
 
     public async Task LoginUser()
     {
-        // This doesn't count login failures towards account lockout
-        // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+        // try find the user by username or email
+         var user = await UserManager.FindByNameAsync(Input.UserNameOrEmail) ?? await UserManager.FindByEmailAsync(Input.UserNameOrEmail);
+
+         if (user is null)
+         {
+             _errorMessage = "Error: Invalid login attempt.";
+             return;
+         }
+
+        // This will count login failures towards account lockout, max 5 attempts
+        // To disable password failures to trigger account lockout, set lockoutOnFailure: false
+        var result = await SignInManager.PasswordSignInAsync(user, Input.Password, Input.RememberMe, lockoutOnFailure: true);
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in");
@@ -96,7 +106,7 @@
         {
             RedirectManager.RedirectTo(
                 "Account/LoginWith2fa",
-                new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+                new Dictionary<string, object?> { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
         }
         else if (result.IsLockedOut)
         {
@@ -111,7 +121,9 @@
 
     private sealed class InputModel
     {
-        [Required] [EmailAddress] public string Email { get; set; } = "";
+        [Required]
+        [DataType(DataType.Text)]
+        public string UserNameOrEmail { get; set; } = "";
 
         [Required]
         [DataType(DataType.Password)]
