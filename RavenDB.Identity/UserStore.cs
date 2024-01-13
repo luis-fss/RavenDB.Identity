@@ -315,8 +315,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public Task<TUser?> FindByIdAsync(string userId, CancellationToken cancellationToken) =>
-            DbSession.LoadAsync<TUser>(userId, cancellationToken)!;
+        public Task<TUser?> FindByIdAsync(string userId, CancellationToken cancellationToken) => DbSession.LoadAsync<TUser>(userId, cancellationToken)!;
 
         /// <inheritdoc />
         public Task<TUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
@@ -580,12 +579,10 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public Task<string?> GetEmailAsync(TUser user, CancellationToken cancellationToken) =>
-            Task.FromResult(user.Email)!;
+        public Task<string?> GetEmailAsync(TUser user, CancellationToken cancellationToken) => Task.FromResult(user.Email)!;
 
         /// <inheritdoc />
-        public Task<bool> GetEmailConfirmedAsync(TUser user, CancellationToken cancellationToken) =>
-            Task.FromResult(user.EmailConfirmed);
+        public Task<bool> GetEmailConfirmedAsync(TUser user, CancellationToken cancellationToken) => Task.FromResult(user.EmailConfirmed);
 
         /// <inheritdoc />
         public Task SetEmailConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
@@ -613,8 +610,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public Task<string?> GetNormalizedEmailAsync(TUser user, CancellationToken cancellationToken) =>
-            Task.FromResult(user.Email)!;
+        public Task<string?> GetNormalizedEmailAsync(TUser user, CancellationToken cancellationToken) => Task.FromResult(user.Email)!;
 
         /// <inheritdoc />
         public Task SetNormalizedEmailAsync(TUser user, string? normalizedEmail, CancellationToken cancellationToken)
@@ -714,12 +710,10 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public Task<string?> GetPhoneNumberAsync(TUser user, CancellationToken cancellationToken) =>
-            Task.FromResult(user.PhoneNumber);
+        public Task<string?> GetPhoneNumberAsync(TUser user, CancellationToken cancellationToken) => Task.FromResult(user.PhoneNumber);
 
         /// <inheritdoc />
-        public Task<bool> GetPhoneNumberConfirmedAsync(TUser user, CancellationToken cancellationToken) =>
-            Task.FromResult(user.PhoneNumberConfirmed);
+        public Task<bool> GetPhoneNumberConfirmedAsync(TUser user, CancellationToken cancellationToken) => Task.FromResult(user.PhoneNumberConfirmed);
 
         /// <inheritdoc />
         public Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
