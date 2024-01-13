@@ -332,10 +332,7 @@ namespace Raven.Identity
         public Task AddLoginAsync(TUser user, UserLoginInfo login, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-            if (login == null)
-            {
-                throw new ArgumentNullException(nameof(login));
-            }
+            ArgumentNullException.ThrowIfNull(login);
 
             user.Logins.Add(login);
             return Task.CompletedTask;
@@ -381,10 +378,7 @@ namespace Raven.Identity
         public Task<IList<Claim>> GetClaimsAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
-            IList<Claim> result = user.Claims
-                .Select(c => new Claim(c.ClaimType, c.ClaimValue))
-                .ToList();
+            IList<Claim> result = user.Claims.Select(c => new Claim(c.ClaimType, c.ClaimValue)).ToList();
             return Task.FromResult(result);
         }
 
@@ -392,7 +386,6 @@ namespace Raven.Identity
         public Task AddClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
             user.Claims.AddRange(claims.Select(c => new IdentityUserClaim { ClaimType = c.Type, ClaimValue = c.Value }));
             return Task.CompletedTask;
         }
@@ -414,7 +407,6 @@ namespace Raven.Identity
         public Task RemoveClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
             user.Claims.RemoveAll(identityClaim => claims.Any(c => c.Type == identityClaim.ClaimType && c.Value == identityClaim.ClaimValue));
             return Task.CompletedTask;
         }
@@ -423,10 +415,7 @@ namespace Raven.Identity
         public async Task<IList<TUser>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
         {
             ThrowIfDisposedOrCancelled(cancellationToken);
-            if (claim == null)
-            {
-                throw new ArgumentNullException(nameof(claim));
-            }
+            ArgumentNullException.ThrowIfNull(claim);
 
             var list = await UserQuery()
                 .Where(u => u.Claims.Any(c => c.ClaimType == claim.Type && c.ClaimValue == claim.Value))
@@ -489,7 +478,6 @@ namespace Raven.Identity
         public Task<IList<string>> GetRolesAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
             return Task.FromResult<IList<string>>(new List<string>(user.Roles));
         }
 
@@ -562,7 +550,6 @@ namespace Raven.Identity
         public Task<string?> GetSecurityStampAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
             return Task.FromResult(user.SecurityStamp);
         }
 
@@ -693,7 +680,6 @@ namespace Raven.Identity
         public Task<bool> GetTwoFactorEnabledAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-
             return Task.FromResult(user.TwoFactorEnabled);
         }
 
@@ -749,10 +735,8 @@ namespace Raven.Identity
         public Task SetTokenAsync(TUser user, string loginProvider, string name, string? value, CancellationToken cancellationToken)
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
+            ArgumentNullException.ThrowIfNull(value);
+
             var existingToken = user.Tokens.FirstOrDefault(t => t.LoginProvider == loginProvider && t.Name == name);
             if (existingToken != null)
             {
@@ -823,23 +807,14 @@ namespace Raven.Identity
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private void ThrowIfNullDisposedCancelled(TUser user, CancellationToken token)
         {
-            if (user == null)
-            {
-                throw new ArgumentNullException(nameof(user));
-            }
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(GetType().Name);
-            }
+            ArgumentNullException.ThrowIfNull(user);
+            ObjectDisposedException.ThrowIf(_disposed, this);
             token.ThrowIfCancellationRequested();
         }
 
         private void ThrowIfDisposedOrCancelled(CancellationToken token)
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(GetType().Name);
-            }
+            ObjectDisposedException.ThrowIf(_disposed, this);
             token.ThrowIfCancellationRequested();
         }
 
