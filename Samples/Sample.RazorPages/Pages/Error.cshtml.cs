@@ -9,7 +9,7 @@ namespace Sample.RazorPages.Pages
     {
         public string RequestId { get; set; }
 
-        public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+        public bool ShowRequestId => !string.IsNullOrWhiteSpace(RequestId);
 
         public void OnGet()
         {

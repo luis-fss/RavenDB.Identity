@@ -93,7 +93,7 @@ namespace Raven.Identity
         {
             ThrowIfNullDisposedCancelled(user, cancellationToken);
             // User name should not be modified
-            if (string.IsNullOrEmpty(user.UserName))
+            if (string.IsNullOrWhiteSpace(user.UserName))
             {
                 user.UserName = userName ?? throw new ArgumentNullException(nameof(userName));
             }
@@ -484,7 +484,7 @@ namespace Raven.Identity
         /// <inheritdoc />
         public Task<bool> IsInRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(roleName))
+            if (string.IsNullOrWhiteSpace(roleName))
             {
                 throw new ArgumentNullException(nameof(roleName));
             }
@@ -496,7 +496,7 @@ namespace Raven.Identity
         public async Task<IList<TUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
         {
             ThrowIfDisposedOrCancelled(cancellationToken);
-            if (string.IsNullOrEmpty(roleName))
+            if (string.IsNullOrWhiteSpace(roleName))
             {
                 throw new ArgumentNullException(nameof(roleName));
             }
@@ -588,7 +588,7 @@ namespace Raven.Identity
             var key = Conventions.CompareExchangeKeyForEmail(normalizedEmail);
             var readResult = await DbSession.Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)DbSession).DatabaseName)
                 .SendAsync(new GetCompareExchangeValueOperation<string>(key), token: cancellationToken);
-            if (readResult == null || string.IsNullOrEmpty(readResult.Value))
+            if (readResult == null || string.IsNullOrWhiteSpace(readResult.Value))
             {
                 return null;
             }

@@ -66,7 +66,7 @@ namespace RavenDB.DependencyInjection
 
         private IDocumentStore GetDocumentStore(Action<IDocumentStore>? configureDbStore)
         {
-            if (string.IsNullOrEmpty(_options?.Settings?.DatabaseName))
+            if (string.IsNullOrWhiteSpace(_options?.Settings?.DatabaseName))
             {
                 throw new InvalidOperationException("You haven't configured a DatabaseName. Ensure your appsettings.json contains a RavenSettings section.");
             }
@@ -98,7 +98,7 @@ namespace RavenDB.DependencyInjection
         {
             var certRelativePath = _options?.Settings?.CertFilePath;
 
-            if (!string.IsNullOrEmpty(certRelativePath))
+            if (!string.IsNullOrWhiteSpace(certRelativePath))
             {
                 var certFilePath = Path.Combine(_options?.GetHostingEnvironment?.ContentRootPath ?? string.Empty, certRelativePath);
                 if (!File.Exists(certFilePath))
