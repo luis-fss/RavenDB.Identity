@@ -28,7 +28,7 @@ namespace Raven.Identity.Migrations
         }
 
         /// <summary>
-        /// Runs the migration. This operation can take several minutes depeneding on how many users are in your database.
+        /// Runs the migration. This operation can take several minutes depending on how many users are in your database.
         /// IMPORTANT: backup your database before running this migration, as data loss is possible.
         /// </summary>
         public void Migrate()
@@ -81,7 +81,7 @@ namespace Raven.Identity.Migrations
                 var newId = Conventions.UserIdFor(user, _newUserIdType, DocStore);
                 if (_newUserIdType == UserIdType.Consecutive && newId != null && newId.EndsWith("|"))
                 {
-                    // We'll need to specify the full ID, as bulk insert doens't work with "Users|" type IDs.
+                    // We'll need to specify the full ID, as bulk insert doesn't work with "Users|" type IDs.
                     newId = Conventions.CollectionNameWithSeparator<TUser>(DocStore) + nextUserId.ToString();
                     nextUserId++;
                 }
