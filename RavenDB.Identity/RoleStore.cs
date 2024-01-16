@@ -150,7 +150,7 @@ namespace Raven.Identity
             }
 
             var roleId = GetRavenIdFromRoleName(role.Name, AsyncSession.Advanced.DocumentStore);
-            await AsyncSession.StoreAsync(role, roleId);
+            await AsyncSession.StoreAsync(role, roleId, cancellationToken);
             await SaveChanges(cancellationToken);
             return IdentityResult.Success;
         }
@@ -289,7 +289,7 @@ namespace Raven.Identity
             ThrowIfDisposed();
 
             var roleId = GetRavenIdFromRoleName(normalizedName, AsyncSession.Advanced.DocumentStore);
-            return AsyncSession.LoadAsync<TRole>(roleId)!;
+            return AsyncSession.LoadAsync<TRole>(roleId, cancellationToken)!;
         }
 
         /// <summary>
