@@ -5,39 +5,12 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Raven.Client.Documents.Session;
 using Raven.Client.Exceptions;
 using Raven.Client.Documents;
 
 namespace Raven.Identity
 {
-    /// <summary>
-    ///
-    /// </summary>
-    /// <typeparam name="TRole"></typeparam>
-    public class RoleMan<TRole> : RoleManager<TRole>
-        where TRole : class
-    {
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="store"></param>
-        /// <param name="roleValidators"></param>
-        /// <param name="keyNormalizer"></param>
-        /// <param name="errors"></param>
-        /// <param name="logger"></param>
-        public RoleMan(
-            IRoleStore<TRole> store,
-            IEnumerable<IRoleValidator<TRole>> roleValidators,
-            ILookupNormalizer keyNormalizer,
-            IdentityErrorDescriber errors,
-            ILogger<RoleMan<TRole>> logger) :
-            base(store, roleValidators, keyNormalizer, errors, logger)
-        {
-        }
-    }
-
     /// <summary>
     /// Creates a new instance of a persistence store for roles.
     /// </summary>
