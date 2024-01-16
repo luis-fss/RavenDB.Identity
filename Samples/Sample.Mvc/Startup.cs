@@ -9,7 +9,7 @@ using Raven.Identity;
 using Sample.Mvc.Common;
 using Sample.Mvc.Models;
 using System.Collections.Generic;
-using RavenDB.DependencyInjection;
+using Raven.Identity.DependencyInjection;
 
 namespace Sample.Mvc
 {

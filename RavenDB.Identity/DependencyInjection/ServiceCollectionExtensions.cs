@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 
-namespace RavenDB.DependencyInjection
+namespace Raven.Identity.DependencyInjection
 {
     /// <summary>
     /// Extends the <see cref="IServiceCollection"/> so that RavenDB services can be registered through it.

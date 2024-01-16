@@ -1,10 +1,12 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System;
+using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 
-namespace RavenDB.DependencyInjection
+namespace Raven.Identity.DependencyInjection
 {
     /// <summary>
     /// The configurations for <see cref="RavenOptions"/>.

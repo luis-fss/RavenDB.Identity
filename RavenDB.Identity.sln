@@ -17,8 +17,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample.Mvc", "Samples\Sampl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample.BlazorApp", "Samples\Sample.BlazorApp\Sample.BlazorApp.csproj", "{CDD5B16E-B9DF-4E5B-87E9-4388783C5EE7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenDB.DependencyInjection", "RavenDB.DependencyInjection\RavenDB.DependencyInjection.csproj", "{7454FD1D-9866-4DB0-8439-EA39FD07A8A4}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,10 +39,6 @@ Global
 		{CDD5B16E-B9DF-4E5B-87E9-4388783C5EE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CDD5B16E-B9DF-4E5B-87E9-4388783C5EE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CDD5B16E-B9DF-4E5B-87E9-4388783C5EE7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7454FD1D-9866-4DB0-8439-EA39FD07A8A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7454FD1D-9866-4DB0-8439-EA39FD07A8A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7454FD1D-9866-4DB0-8439-EA39FD07A8A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7454FD1D-9866-4DB0-8439-EA39FD07A8A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

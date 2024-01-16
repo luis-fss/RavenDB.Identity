@@ -1,9 +1,10 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Raven.Client.Documents;
 
-namespace RavenDB.DependencyInjection
+namespace Raven.Identity.DependencyInjection
 {
     /// <summary>
     /// The Options to configure <see cref="IDocumentStore"/>.

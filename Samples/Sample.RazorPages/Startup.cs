@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Raven.Client.Documents;
 using Raven.Identity;
-using RavenDB.DependencyInjection;
+using Raven.Identity.DependencyInjection;
 using Sample.RazorPages.Common;
 using Sample.RazorPages.Filters;
 using Sample.RazorPages.Models;

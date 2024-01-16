@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 
-namespace RavenDB.DependencyInjection
+namespace Raven.Identity.DependencyInjection
 {
     /// <summary>
     /// Contains settings for RavenDB, such as the URL to the database.
