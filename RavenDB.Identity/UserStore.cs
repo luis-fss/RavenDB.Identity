@@ -37,33 +37,33 @@ namespace Raven.Identity
 		where TRole : IdentityRole, new()
     {
         private bool _disposed;
-        private readonly Func<IAsyncDocumentSession>? _getSessionFunc;
-        private IAsyncDocumentSession? _session;
+        private readonly Func<DbSessionManager>? _getSessionManagerFunc;
+        private DbSessionManager? _sessionManager;
         private readonly ILogger _logger;
         private readonly IOptions<RavenDbIdentityOptions> _options;
 
         /// <summary>
-        /// Creates a new user store that uses the Raven document session returned from the specified session fetcher.
+        /// Creates a new user store that uses the <see cref="DbSessionManager"/> returned from the specified session fetcher.
         /// </summary>
-        /// <param name="getSession">The function that gets the Raven document session.</param>
+        /// <param name="getSessionManager">The function that gets the <see cref="DbSessionManager"/>.</param>
         /// <param name="logger"></param>
         /// <param name="options"></param>
-        public UserStore(Func<IAsyncDocumentSession> getSession, ILogger<UserStore<TUser, TRole>> logger, IOptions<RavenDbIdentityOptions> options)
+        public UserStore(Func<DbSessionManager> getSessionManager, ILogger<UserStore<TUser, TRole>> logger, IOptions<RavenDbIdentityOptions> options)
         {
-            _getSessionFunc = getSession;
+            _getSessionManagerFunc = getSessionManager;
             _logger = logger;
             _options = options;
         }
 
         /// <summary>
-        /// Creates a new user store that uses the specified Raven document session.
+        /// Creates a new user store that uses the specified <see cref="DbSessionManager"/>.
         /// </summary>
-        /// <param name="session"></param>
+        /// <param name="sessionManager"><see cref="DbSessionManager"/></param>
         /// <param name="logger"></param>
         /// <param name="options"></param>
-        public UserStore(IAsyncDocumentSession session, ILogger<UserStore<TUser, TRole>> logger, IOptions<RavenDbIdentityOptions> options)
+        public UserStore(DbSessionManager sessionManager, ILogger<UserStore<TUser, TRole>> logger, IOptions<RavenDbIdentityOptions> options)
         {
-            _session = session;
+            _sessionManager = sessionManager;
             _logger = logger;
             _options = options;
         }
@@ -163,9 +163,9 @@ namespace Raven.Identity
             // 2. Store the user in the database and save it.
             try
             {
-                DbSession.Advanced.WaitForIndexesAfterSaveChanges();
-                await DbSession.StoreAsync(user, cancellationToken);
-                await DbSession.SaveChangesAsync(cancellationToken);
+                SessionManager.GetAsyncSession().Advanced.WaitForIndexesAfterSaveChanges();
+                await SessionManager.GetAsyncSession().StoreAsync(user, cancellationToken);
+                await SessionManager.SaveChangesAsync(cancellationToken);
 
                 // 3-A. Update the user name reservation to point to the saved user.
                 var updateUserNameReservationResult = await UpdateReservationAsync(Conventions.CompareExchangeKeyForUserName(name), user.Id!);
@@ -188,8 +188,7 @@ namespace Raven.Identity
                 // The compare/exchange user name and email reservation are cluster-wide, outside of the session scope.
                 // We need to manually roll it back.
                 _logger.LogError(createUserError, "Error during user creation");
-                DbSession.Delete(user.Id); // It's possible user is already saved to the database. If so, delete him.
-                await DbSession.SaveChangesAsync(cancellationToken);
+                SessionManager.GetAsyncSession().Delete(user.Id); // It's possible user is already saved to the database. If so, delete him.
 
                 try
                 {
@@ -231,7 +230,7 @@ namespace Raven.Identity
             }
 
             // If nothing changed we have no work to do
-            var changes = DbSession.Advanced.WhatChanged();
+            var changes = SessionManager.GetAsyncSession().Advanced.WhatChanged();
             var hasUserChanged = changes.TryGetValue(user.Id, out var userChange);
             if (!hasUserChanged || userChange == null)
             {
@@ -248,11 +247,6 @@ namespace Raven.Identity
                 _logger.LogTrace("User {UserId} did not have modified Email, saving normally", user.Id);
 
                 // Email didn't change, so no reservation to update. Just save the user data
-                if (_options.Value.AutoSaveChanges)
-                {
-                    DbSession.Advanced.WaitForIndexesAfterSaveChanges();
-                    await DbSession.SaveChangesAsync(cancellationToken);
-                }
                 return IdentityResult.Success;
             }
 
@@ -271,17 +265,11 @@ namespace Raven.Identity
             var emailReservation = await CreateEmailReservationAsync(user.Email, user.Id);
             if (!emailReservation.Successful)
             {
-                DbSession.Advanced.IgnoreChangesFor(user);
+                SessionManager.GetAsyncSession().Advanced.IgnoreChangesFor(user);
                 return IdentityResult.Failed(new IdentityErrorDescriber().DuplicateEmail(user.Email));
             }
 
             // Email reservation done, now we save the user data
-            if (_options.Value.AutoSaveChanges)
-            {
-                DbSession.Advanced.WaitForIndexesAfterSaveChanges();
-                await DbSession.SaveChangesAsync(cancellationToken);
-            }
-
             await TryRemoveMigratedEmailReservation(oldEmail, user.Email);
             return IdentityResult.Success;
         }
@@ -294,9 +282,9 @@ namespace Raven.Identity
 
             // Delete the user and save it. We must save it because deleting is a cluster-wide operation.
             // Only if the deletion succeeds will we remove the cluster-wide compare/exchange key.
-            DbSession.Delete(user);
-            DbSession.Advanced.WaitForIndexesAfterSaveChanges();
-            await DbSession.SaveChangesAsync(cancellationToken);
+            SessionManager.GetAsyncSession().Delete(user);
+            SessionManager.GetAsyncSession().Advanced.WaitForIndexesAfterSaveChanges();
+            await SessionManager.SaveChangesAsync(cancellationToken);
 
             // Delete was successful, remove the cluster-wide compare/exchange user name and email keys.
             var deletionResult = await DeleteUserNameReservation(user.UserName);
@@ -315,7 +303,7 @@ namespace Raven.Identity
         }
 
         /// <inheritdoc />
-        public Task<TUser?> FindByIdAsync(string userId, CancellationToken cancellationToken) => DbSession.LoadAsync<TUser>(userId, cancellationToken)!;
+        public Task<TUser?> FindByIdAsync(string userId, CancellationToken cancellationToken) => SessionManager.GetAsyncSession().LoadAsync<TUser>(userId, cancellationToken)!;
 
         /// <inheritdoc />
         public Task<TUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
@@ -360,13 +348,13 @@ namespace Raven.Identity
             {
                 // index has a bit different structure
                 var key = loginProvider + "|" + providerKey;
-                return DbSession.Query<IdentityUserIndex<TUser>.Result, IdentityUserIndex<TUser>>()
+                return SessionManager.GetAsyncSession().Query<IdentityUserIndex<TUser>.Result, IdentityUserIndex<TUser>>()
                     .Where(u => u.LoginProviderIdentifiers != null && u.LoginProviderIdentifiers.Contains(key))
                     .As<TUser>()
                     .FirstOrDefaultAsync(cancellationToken)!;
             }
 
-            return DbSession.Query<TUser>()
+            return SessionManager.GetAsyncSession().Query<TUser>()
                 .FirstOrDefaultAsync(u => u.Logins.Any(l => l.LoginProvider == loginProvider && l.ProviderKey == providerKey), cancellationToken)!;
         }
 
@@ -434,8 +422,8 @@ namespace Raven.Identity
             ThrowIfNullDisposedCancelled(user, cancellationToken);
 
             // See if we have an IdentityRole with that name.
-            var roleId = Conventions.RoleIdFor<TRole>(roleName, DbSession.Advanced.DocumentStore);
-            var existingRoleOrNull = await DbSession.LoadAsync<IdentityRole>(roleId, cancellationToken);
+            var roleId = Conventions.RoleIdFor<TRole>(roleName, SessionManager.GetAsyncSession().Advanced.DocumentStore);
+            var existingRoleOrNull = await SessionManager.GetAsyncSession().LoadAsync<IdentityRole>(roleId, cancellationToken);
             if (existingRoleOrNull == null)
             {
                 ThrowIfDisposedOrCancelled(cancellationToken);
@@ -443,7 +431,7 @@ namespace Raven.Identity
                 {
                     Name = roleName.ToLowerInvariant()
                 };
-                await DbSession.StoreAsync(existingRoleOrNull, roleId, cancellationToken);
+                await SessionManager.GetAsyncSession().StoreAsync(existingRoleOrNull, roleId, cancellationToken);
             }
 
             // Use the real name (not normalized/uppered/lowered) of the role, as specified by the user.
@@ -466,8 +454,8 @@ namespace Raven.Identity
 
             user.GetRolesList().RemoveAll(r => string.Equals(r, roleName, StringComparison.InvariantCultureIgnoreCase));
 
-            var roleId = RoleStore<TRole>.GetRavenIdFromRoleName(roleName, DbSession.Advanced.DocumentStore);
-            var roleOrNull = await DbSession.LoadAsync<IdentityRole>(roleId, cancellationToken);
+            var roleId = RoleStore<TRole>.GetRavenIdFromRoleName(roleName, SessionManager.GetAsyncSession().Advanced.DocumentStore);
+            var roleOrNull = await SessionManager.GetAsyncSession().LoadAsync<IdentityRole>(roleId, cancellationToken);
             if (roleOrNull != null && user.Id != null)
             {
                 roleOrNull.Users.Remove(user.Id);
@@ -586,14 +574,14 @@ namespace Raven.Identity
             // We decided against this because indexes can be stale.
             // Instead, we're going to go straight to the compare/exchange values and find the user for the email.
             var key = Conventions.CompareExchangeKeyForEmail(normalizedEmail);
-            var readResult = await DbSession.Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)DbSession).DatabaseName)
+            var readResult = await SessionManager.GetAsyncSession().Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)SessionManager.GetAsyncSession()).DatabaseName)
                 .SendAsync(new GetCompareExchangeValueOperation<string>(key), token: cancellationToken);
             if (readResult == null || string.IsNullOrWhiteSpace(readResult.Value))
             {
                 return null;
             }
 
-            return await DbSession.LoadAsync<TUser>(readResult.Value, cancellationToken);
+            return await SessionManager.GetAsyncSession().LoadAsync<TUser>(readResult.Value, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -795,14 +783,14 @@ namespace Raven.Identity
         /// <summary>
         /// Gets the users as an IQueryable.
         /// </summary>
-        public IQueryable<TUser> Users => DbSession.Query<TUser>();
+        public IQueryable<TUser> Users => SessionManager.GetAsyncSession().Query<TUser>();
 
         #endregion
 
         /// <summary>
         /// Gets access to current session being used by this store.
         /// </summary>
-        private IAsyncDocumentSession DbSession => _session ??= _getSessionFunc!();
+        private DbSessionManager SessionManager => _sessionManager ??= _getSessionManagerFunc!();
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private void ThrowIfNullDisposedCancelled(TUser user, CancellationToken token)
@@ -828,7 +816,7 @@ namespace Raven.Identity
 		{
 			var compareExchangeKey = Conventions.CompareExchangeKeyForUserName(name);
 			var reserveUserNameOperation = new PutCompareExchangeValueOperation<string>(compareExchangeKey, id, 0);
-            return DbSession.Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)DbSession).DatabaseName).SendAsync(reserveUserNameOperation);
+            return SessionManager.GetAsyncSession().Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)SessionManager.GetAsyncSession()).DatabaseName).SendAsync(reserveUserNameOperation);
         }
 
         /// <summary>
@@ -841,7 +829,7 @@ namespace Raven.Identity
 		{
 			var compareExchangeKey = Conventions.CompareExchangeKeyForEmail(email);
 			var reserveEmailOperation = new PutCompareExchangeValueOperation<string>(compareExchangeKey, id, 0);
-            return DbSession.Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)DbSession).DatabaseName).SendAsync(reserveEmailOperation);
+            return SessionManager.GetAsyncSession().Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)SessionManager.GetAsyncSession()).DatabaseName).SendAsync(reserveEmailOperation);
         }
 
         /// <summary>
@@ -852,9 +840,9 @@ namespace Raven.Identity
         /// <returns></returns>
         private async Task<CompareExchangeResult<string>> UpdateReservationAsync(string key, string id)
         {
-            var store = DbSession.Advanced.DocumentStore;
+            var store = SessionManager.GetAsyncSession().Advanced.DocumentStore;
 
-            var readResult = await store.Operations.ForDatabase(((AsyncDocumentSession)DbSession).DatabaseName).SendAsync(new GetCompareExchangeValueOperation<string>(key));
+            var readResult = await store.Operations.ForDatabase(((AsyncDocumentSession)SessionManager.GetAsyncSession()).DatabaseName).SendAsync(new GetCompareExchangeValueOperation<string>(key));
             if (readResult == null)
             {
                 _logger.LogError("Failed to get current index for {KeyReservation} to update it to {ReservedFor}", key, id);
@@ -862,7 +850,7 @@ namespace Raven.Identity
             }
 
             var updateEmailUserIdOperation = new PutCompareExchangeValueOperation<string>(key, id, readResult.Index);
-            return await store.Operations.ForDatabase(((AsyncDocumentSession)DbSession).DatabaseName).SendAsync(updateEmailUserIdOperation);
+            return await store.Operations.ForDatabase(((AsyncDocumentSession)SessionManager.GetAsyncSession()).DatabaseName).SendAsync(updateEmailUserIdOperation);
         }
 
 		/// <summary>
@@ -873,9 +861,9 @@ namespace Raven.Identity
         private async Task<CompareExchangeResult<string>> DeleteUserNameReservation(string name)
         {
             var key = Conventions.CompareExchangeKeyForUserName(name);
-            var store = DbSession.Advanced.DocumentStore;
+            var store = SessionManager.GetAsyncSession().Advanced.DocumentStore;
 
-            var readResult = await store.Operations.ForDatabase(((AsyncDocumentSession)DbSession).DatabaseName).SendAsync(new GetCompareExchangeValueOperation<string>(key));
+            var readResult = await store.Operations.ForDatabase(((AsyncDocumentSession)SessionManager.GetAsyncSession()).DatabaseName).SendAsync(new GetCompareExchangeValueOperation<string>(key));
             if (readResult == null)
             {
                 _logger.LogError("Failed to get current index for {UserNameReservation} to delete it", key);
@@ -883,7 +871,7 @@ namespace Raven.Identity
             }
 
             var deleteUserNameOperation = new DeleteCompareExchangeValueOperation<string>(key, readResult.Index);
-            return await DbSession.Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)DbSession).DatabaseName).SendAsync(deleteUserNameOperation);
+            return await SessionManager.GetAsyncSession().Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)SessionManager.GetAsyncSession()).DatabaseName).SendAsync(deleteUserNameOperation);
         }
 
 		/// <summary>
@@ -894,9 +882,9 @@ namespace Raven.Identity
         private async Task<CompareExchangeResult<string>> DeleteEmailReservation(string email)
         {
             var key = Conventions.CompareExchangeKeyForEmail(email);
-            var store = DbSession.Advanced.DocumentStore;
+            var store = SessionManager.GetAsyncSession().Advanced.DocumentStore;
 
-            var readResult = await store.Operations.ForDatabase(((AsyncDocumentSession)DbSession).DatabaseName).SendAsync(new GetCompareExchangeValueOperation<string>(key));
+            var readResult = await store.Operations.ForDatabase(((AsyncDocumentSession)SessionManager.GetAsyncSession()).DatabaseName).SendAsync(new GetCompareExchangeValueOperation<string>(key));
             if (readResult == null)
             {
                 _logger.LogError("Failed to get current index for {EmailReservation} to delete it", key);
@@ -904,7 +892,7 @@ namespace Raven.Identity
             }
 
             var deleteEmailOperation = new DeleteCompareExchangeValueOperation<string>(key, readResult.Index);
-            return await DbSession.Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)DbSession).DatabaseName).SendAsync(deleteEmailOperation);
+            return await SessionManager.GetAsyncSession().Advanced.DocumentStore.Operations.ForDatabase(((AsyncDocumentSession)SessionManager.GetAsyncSession()).DatabaseName).SendAsync(deleteEmailOperation);
         }
 
         /// <summary>
@@ -929,8 +917,8 @@ namespace Raven.Identity
         private IRavenQueryable<TUser> UserQuery()
         {
             return _options.Value.UseStaticIndexes
-                ? DbSession.Query<TUser, IdentityUserIndex<TUser>>()
-                : DbSession.Query<TUser>();
+                ? SessionManager.GetAsyncSession().Query<TUser, IdentityUserIndex<TUser>>()
+                : SessionManager.GetAsyncSession().Query<TUser>();
         }
     }
 }

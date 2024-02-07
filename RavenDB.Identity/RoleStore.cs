@@ -5,7 +5,6 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using Raven.Client.Documents.Session;
 using Raven.Client.Exceptions;
 using Raven.Client.Documents;
 
@@ -21,10 +20,10 @@ namespace Raven.Identity
         /// <summary>
         /// Constructs a new instance of <see cref="RoleStore{TRole}"/>.
         /// </summary>
-        /// <param name="context">The <see cref="IAsyncDocumentSession"/>.</param>
+        /// <param name="sessionManager">The <see cref="DbSessionManager"/>.</param>
         /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-        public RoleStore(IAsyncDocumentSession context, IdentityErrorDescriber? describer = null)
-            : base(context, describer)
+        public RoleStore(DbSessionManager sessionManager, IdentityErrorDescriber? describer = null)
+            : base(sessionManager, describer)
         {
         }
 
@@ -54,11 +53,11 @@ namespace Raven.Identity
         /// <summary>
         /// Constructs a new instance of <see cref="RoleStore{TRole, TRoleClaim}"/>.
         /// </summary>
-        /// <param name="context">The <see cref="IAsyncDocumentSession"/>.</param>
+        /// <param name="sessionManager">The <see cref="DbSessionManager"/>.</param>
         /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-        public RoleStore(IAsyncDocumentSession context, IdentityErrorDescriber? describer = null)
+        public RoleStore(DbSessionManager sessionManager, IdentityErrorDescriber? describer = null)
         {
-            AsyncSession = context ?? throw new ArgumentNullException(nameof(context));
+            SessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
             ErrorDescriber = describer ?? new IdentityErrorDescriber();
         }
 
@@ -68,7 +67,7 @@ namespace Raven.Identity
         /// <summary>
         /// Gets the database context for this store.
         /// </summary>
-        public IAsyncDocumentSession AsyncSession { get; private set; }
+        public DbSessionManager SessionManager { get; private set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IdentityErrorDescriber"/> for any error that occurred with the current operation.
@@ -90,7 +89,7 @@ namespace Raven.Identity
         {
             if (AutoSaveChanges)
             {
-                await AsyncSession.SaveChangesAsync(cancellationToken);
+                await SessionManager.SaveChangesAsync(cancellationToken);
             }
         }
 
@@ -99,7 +98,7 @@ namespace Raven.Identity
         /// <summary>
         /// Gets the roles as an IQueryable.
         /// </summary>
-        public virtual IQueryable<TRole> Roles => AsyncSession.Query<TRole>();
+        public virtual IQueryable<TRole> Roles => SessionManager.GetAsyncSession().Query<TRole>();
 
         #endregion
 
@@ -122,8 +121,8 @@ namespace Raven.Identity
                 throw new ArgumentNullException(nameof(role.Name));
             }
 
-            var roleId = GetRavenIdFromRoleName(role.Name, AsyncSession.Advanced.DocumentStore);
-            await AsyncSession.StoreAsync(role, roleId, cancellationToken);
+            var roleId = GetRavenIdFromRoleName(role.Name, SessionManager.GetAsyncSession().Advanced.DocumentStore);
+            await SessionManager.GetAsyncSession().StoreAsync(role, roleId, cancellationToken);
             await SaveChanges(cancellationToken);
             return IdentityResult.Success;
         }
@@ -171,7 +170,7 @@ namespace Raven.Identity
             {
                 throw new ArgumentNullException(nameof(role));
             }
-            AsyncSession.Delete(role.Id);
+            SessionManager.GetAsyncSession().Delete(role.Id);
             try
             {
                 await SaveChanges(cancellationToken);
@@ -247,7 +246,7 @@ namespace Raven.Identity
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
-            return AsyncSession.LoadAsync<TRole>(id, cancellationToken)!;
+            return SessionManager.GetAsyncSession().LoadAsync<TRole>(id, cancellationToken)!;
         }
 
         /// <summary>
@@ -261,8 +260,8 @@ namespace Raven.Identity
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
 
-            var roleId = GetRavenIdFromRoleName(normalizedName, AsyncSession.Advanced.DocumentStore);
-            return AsyncSession.LoadAsync<TRole>(roleId, cancellationToken)!;
+            var roleId = GetRavenIdFromRoleName(normalizedName, SessionManager.GetAsyncSession().Advanced.DocumentStore);
+            return SessionManager.GetAsyncSession().LoadAsync<TRole>(roleId, cancellationToken)!;
         }
 
         /// <summary>

@@ -13,14 +13,5 @@ namespace Raven.Identity
         /// </remarks>
         /// <seealso cref="IdentityUserIndex{TUser}"/>
         public bool UseStaticIndexes { get; set; }
-
-        /// <summary>
-        /// Gets or sets a flag indicating if changes should be persisted after UpdateAsync is called.
-        /// Note: CreateAsync and DeleteAsync will call SaveChanges regardless of this configuration, this is necessary to guarantee the uniqueness of the email and username.
-        /// </summary>
-        /// <value>
-        /// True if changes should be automatically persisted, otherwise false.
-        /// </value>
-        public bool AutoSaveChanges { get; set; } = true;
     }
 }

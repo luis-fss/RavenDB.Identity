@@ -28,7 +28,8 @@ builder.Services
     // Create an IDocumentStore singleton from the RavenSettings.
     .AddRavenDbDocumentStore()
     // Create a RavenDB IAsyncDocumentSession for each request. You're responsible for calling .SaveChanges after each request.
-    .AddRavenDbAsyncSession()
+    //.AddRavenDbAsyncSession()
+    .AddRavenDbSessionManager()
     // Adds an identity system to ASP.NET Core
     .AddIdentity<ApplicationUser, Raven.Identity.IdentityRole>(options =>
     {
@@ -47,7 +48,7 @@ builder.Services
     })
     // Use RavenDB as the store for identity users and roles. Specify your app user type here, and your role type.
     // If you don't have a role type, use Raven.Identity.IdentityRole.
-    .AddRavenDbIdentityStores<ApplicationUser>(options => options.AutoSaveChanges = true)
+    .AddRavenDbIdentityStores<ApplicationUser>()
     .AddDefaultTokenProviders();
 
 var app = builder.Build();

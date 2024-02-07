@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>1.0.0</Version>
-    <ReleaseNotes>.NET8 migration, code cleanups and dependencies upgrades.</ReleaseNotes>
-    <PackageReleaseNotes>.NET8 migration, code cleanups and dependencies upgrades.</PackageReleaseNotes>
+    <Version>2.0.0-alpha</Version>
+    <ReleaseNotes>Add DbSessionManager.</ReleaseNotes>
+    <PackageReleaseNotes>Add DbSessionManager.</PackageReleaseNotes>
     <Description>The simple and easy RavenDB Identity provider for ASP.NET Core. Use Raven to store your users and logins with just a few lines of code.</Description>
     <Authors>Judah Gabriel Himango, Luis Fernando de Souza Santos</Authors>
     <TargetFramework>net8.0</TargetFramework>

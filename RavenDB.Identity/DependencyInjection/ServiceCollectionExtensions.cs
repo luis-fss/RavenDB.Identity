@@ -47,6 +47,17 @@ namespace Raven.Identity.DependencyInjection
         }
 
         /// <summary>
+        /// Registers a RavenDB <see cref="DbSessionManager"/> to be created and disposed on each request.
+        /// This requires for an <see cref="IDocumentStore"/> to be added to dependency injection services.
+        /// </summary>
+        /// <param name="services"> The <see cref="IServiceCollection" /> to add services to. </param>
+        /// <returns>The same service collection so that multiple calls can be chained.</returns>
+        public static IServiceCollection AddRavenDbSessionManager(this IServiceCollection services)
+        {
+            return services.AddScoped<DbSessionManager>();
+        }
+
+        /// <summary>
         /// Registers a RavenDB <see cref="IAsyncDocumentSession"/> to be created and disposed on each request.
         /// This requires for an <see cref="IDocumentStore"/> to be added to dependency injection services.
         /// </summary>
